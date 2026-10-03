@@ -1,8 +1,27 @@
 import { ArrowRight, Network } from "lucide-react";
 
 import { ServiceRequestForm } from "@/components/service-request-form";
+import { prisma } from "@/lib/db";
+import type { PublicService } from "@/types";
 
-export default function HomePage() {
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  const rows = await prisma.service.findMany({
+    where: { active: true },
+    orderBy: { sortOrder: "asc" },
+  });
+  const services: PublicService[] = rows.map((s) => ({
+    id: s.id,
+    name: s.name,
+    subtitle: s.subtitle,
+    description: s.description,
+    imagePreview: s.imagePreview,
+    imageFull: s.imageFull,
+    sortOrder: s.sortOrder,
+    active: s.active,
+  }));
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* ── Thin accent line at very top ── */}
@@ -52,7 +71,7 @@ export default function HomePage() {
 
       {/* Form */}
       <main className="mx-auto w-full flex-1 px-5 pb-16 sm:px-8">
-        <ServiceRequestForm />
+        <ServiceRequestForm services={services} />
       </main>
 
       <footer className="border-t border-border bg-muted/60">

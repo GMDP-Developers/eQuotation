@@ -28,6 +28,28 @@ model ServiceRequest {
   capacityUnit String // 'Mbps' | 'Gbps'
   ipAddress    String?
   notes        String?
+  status       String   @default("BARU") // 'BARU' | 'DIPROSES' | 'SELESAI' | 'DITOLAK'
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String // 'STATUS_CHANGE' | 'DELETE'
+  targetId  String
+  detail    String?
+  createdAt DateTime @default(now())
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  subtitle    String?
+  description String?
+  imagePreview String? // preview — tampil di kartu layanan (publik)
+  imageFull    String? // gambar full — tampil di panel kanan (publik); fallback ke preview bila kosong
+  sortOrder   Int      @default(0)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

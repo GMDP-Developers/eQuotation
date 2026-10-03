@@ -1,11 +1,26 @@
 import { z } from "zod";
 
-export const SERVICE_TYPES = ["ULO", "Tier One", "Intermix", "Supermix"] as const;
-export type ServiceType = (typeof SERVICE_TYPES)[number];
+export type PublicService = {
+  id: string;
+  name: string;
+  subtitle: string | null;
+  description: string | null;
+  imagePreview: string | null;
+  imageFull: string | null;
+  sortOrder: number;
+  active: boolean;
+};
 
 export const CAPACITY_UNITS = ["Mbps", "Gbps"] as const;
 export type CapacityUnit = (typeof CAPACITY_UNITS)[number];
 
+export const SERVICE_STATUS = [
+  "BARU",
+  "DIPROSES",
+  "SELESAI",
+  "DITOLAK",
+] as const;
+export type ServiceStatus = (typeof SERVICE_STATUS)[number];
 export const serviceRequestSchema = z.object({
   companyName: z
     .string()
@@ -23,7 +38,7 @@ export const serviceRequestSchema = z.object({
     .trim()
     .regex(/^[0-9+\-() ]{6,20}$/, "Nomor telepon tidak valid"),
   email: z.email("Email tidak valid").max(160, "Maksimal 160 karakter"),
-  serviceType: z.enum(SERVICE_TYPES, "Pilih salah satu layanan"),
+  serviceType: z.string().trim().min(1, "Pilih layanan").max(60, "Maksimal 60 karakter"),
   capacity: z.coerce
     .number({ message: "Kapasitas harus berupa angka" })
     .int("Kapasitas harus bilangan bulat")
@@ -31,6 +46,8 @@ export const serviceRequestSchema = z.object({
     .max(10_000_000, "Kapasitas terlalu besar"),
   capacityUnit: z.enum(CAPACITY_UNITS, "Pilih satuan kapasitas"),
   notes: z.string().trim().max(1000, "Maksimal 1000 karakter").optional(),
+  // Honeypot anti-bot: harus kosong. Isian non-kosong = bot.
+  website: z.string().max(0, "Bot terdeteksi").optional(),
 });
 
 export type ServiceRequestInput = z.input<typeof serviceRequestSchema>;
@@ -46,6 +63,7 @@ export type ServiceRequestRecord = {
   serviceType: string;
   capacity: number;
   capacityUnit: string;
+  status: string;
   notes: string | null;
   createdAt: string;
   updatedAt: string;

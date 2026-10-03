@@ -1,10 +1,21 @@
 import { NextResponse } from "next/server";
+import nodemailer from "nodemailer";
 
 import { prisma } from "@/lib/db";
 import { serviceRequestSchema } from "@/types";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   let json: unknown;
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  if (!rateLimit(`submit:${ip}`, 5, 60_000)) {
+    return NextResponse.json(
+      { error: "Terlalu banyak permintaan. Coba lagi beberapa saat." },
+      { status: 429 }
+    );
+  }
+
   try {
     json = await req.json();
   } catch {
@@ -30,6 +41,16 @@ export async function POST(req: Request) {
 
   const data = parsed.data;
 
+  const svc = await prisma.service.findFirst({
+    where: { name: data.serviceType, active: true },
+  });
+  if (!svc) {
+    return NextResponse.json(
+      { error: "Layanan tidak dikenal atau tidak aktif." },
+      { status: 422 }
+    );
+  }
+
   try {
     const created = await prisma.serviceRequest.create({
       data: {
@@ -45,11 +66,46 @@ export async function POST(req: Request) {
       },
     });
 
+    // fire-and-forget setelah 201; tanpa queue/retry — tambah kalau email kritis
+    if (process.env.SMTP_HOST && process.env.NOTIFY_EMAIL) {
+      const port = Number(process.env.SMTP_PORT ?? 587);
+      void nodemailer
+        .createTransport({
+          host: process.env.SMTP_HOST,
+          port,
+          secure: port === 465,
+          auth: process.env.SMTP_USER
+            ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+            : undefined,
+        })
+        .sendMail({
+          from: process.env.SMTP_USER || process.env.NOTIFY_EMAIL,
+          to: process.env.NOTIFY_EMAIL,
+          subject: `[eQuotation] Permintaan baru: ${created.companyName} - ${created.serviceType}`,
+          text: [
+            "Permintaan quotation baru diterima.",
+            "",
+            `Perusahaan: ${created.companyName}`,
+            `Kontak: ${created.contactName}`,
+            `Jabatan: ${created.position ?? "-"}`,
+            `Telepon: ${created.phone}`,
+            `Email: ${created.email}`,
+            `Layanan: ${created.serviceType}`,
+            `Kapasitas: ${created.capacity} ${created.capacityUnit}`,
+            `IP: ${ip}`,
+            `Catatan: ${created.notes ?? "-"}`,
+            `Dibuat: ${created.createdAt.toISOString()}`,
+          ].join("\n"),
+        })
+        .catch((err) => console.error("notifikasi email gagal:", err));
+    }
+
     return NextResponse.json(
       { ok: true, id: created.id },
       { status: 201 }
     );
-  } catch {
+  } catch (err) {
+    console.error("gagal simpan service request:", err);
     return NextResponse.json(
       { error: "Gagal menyimpan data. Coba lagi." },
       { status: 500 }

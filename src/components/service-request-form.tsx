@@ -8,23 +8,23 @@ import {
   Check,
   CheckCircle2,
   Loader2,
-  Network,
   RotateCcw,
   Send,
 } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 
-import { SERVICE_OPTIONS } from "@/data/services";
 import {
   CAPACITY_UNITS,
   serviceRequestSchema,
+  type PublicService,
   type ServiceRequestInput,
   type CapacityUnit,
 } from "@/types";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
 
 type Recap = {
   title: string;
@@ -34,21 +34,17 @@ type Recap = {
 
 const inputClass = "h-11 rounded-lg border-input bg-background md:text-sm";
 
-/** Gambar layanan; fallback ikon bila file belum ada. */
+/** Gambar layanan; fallback blok polos bila file belum ada. */
 function ServiceImage({
   src,
   alt,
-  icon: Icon,
-  accent,
   className = "",
-  iconClassName = "size-5",
+  fit = "cover",
 }: {
-  src: string;
+  src: string | null;
   alt: string;
-  icon: LucideIcon;
-  accent: string;
   className?: string;
-  iconClassName?: string;
+  fit?: "cover" | "contain";
 }) {
   const [failed, setFailed] = useState(false);
 
@@ -58,43 +54,42 @@ function ServiceImage({
         " "
       )}
     >
-      {!failed ? (
+      {src && !failed ? (
         <Image
           src={src}
           alt={alt}
           fill
           sizes="(max-width: 640px) 50vw, 25vw"
-          className="object-cover"
+          className={fit === "contain" ? "object-contain" : "object-cover"}
           onError={() => setFailed(true)}
         />
       ) : (
-        <div
-          className={[
-            "flex size-full items-center justify-center",
-            accent,
-          ].join(" ")}
-        >
-          <Icon className={iconClassName} />
-        </div>
+        <div className="flex size-full items-center justify-center bg-muted/60" />
       )}
     </div>
   );
 }
 
-/** Preview gambar layanan + info; panel kanan. */
-function InfoAside({ serviceType }: { serviceType?: string }) {
-  const service = SERVICE_OPTIONS.find((s) => s.id === serviceType);
+/** Panel kanan: preview layanan terpilih (kiri: kartu preview; kanan: gambar full). */
+function InfoAside({
+  serviceType,
+  services,
+}: {
+  serviceType?: string;
+  services: PublicService[];
+}) {
+  const service = services.find((s) => s.name === serviceType);
+  const preview = services[0];
 
   if (service) {
     return (
       <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
-        <div className="relative aspect-[4/3] w-full bg-muted/50">
+        {/* Gambar full — seluruh gambar tampil, tanpa crop */}
+        <div className="relative aspect-[16/10] w-full bg-muted/50">
           <ServiceImage
-            src={service.image}
-            alt={service.title}
-            icon={service.icon}
-            accent={service.accent}
-            iconClassName="size-12"
+            src={service.imageFull ?? service.imagePreview}
+            alt={service.name}
+            fit="contain"
           />
         </div>
         <div className="flex flex-col gap-2 p-5">
@@ -102,7 +97,7 @@ function InfoAside({ serviceType }: { serviceType?: string }) {
             Anda memilih
           </span>
           <h3 className="text-lg font-semibold tracking-tight text-foreground">
-            {service.title}
+            {service.name}
           </h3>
           <p className="text-[12px] font-medium text-muted-foreground">
             {service.subtitle}
@@ -117,13 +112,11 @@ function InfoAside({ serviceType }: { serviceType?: string }) {
 
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+      {/* Preview gambar layanan pertama (bukan ikon) */}
       <div className="relative aspect-[4/3] w-full bg-muted/50">
         <ServiceImage
-          src="/images/company.jpg"
-          alt="Tentang eQuotation"
-          icon={Network}
-          accent="bg-primary/10 text-primary"
-          iconClassName="size-12"
+          src={preview?.imagePreview ?? null}
+          alt={preview?.name ?? "eQuotation"}
         />
       </div>
       <div className="flex flex-col gap-2 p-5">
@@ -136,7 +129,9 @@ function InfoAside({ serviceType }: { serviceType?: string }) {
         </p>
         <ul className="mt-2 flex flex-col gap-1.5 text-[13px] text-foreground/80">
           {[
-            "ULO · Tier One · Intermix · Supermix",
+            services.length
+              ? services.map((s) => s.name).join(" · ")
+              : "ULO · Tier One · Intermix · Supermix",
             "Penawaran sesuai kebutuhan kapasitas",
             "Respons cepat via WhatsApp",
           ].map((item) => (
@@ -200,7 +195,11 @@ function Field({
   );
 }
 
-export function ServiceRequestForm() {
+export function ServiceRequestForm({
+  services,
+}: {
+  services: PublicService[];
+}) {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [recap, setRecap] = useState<Recap | null>(null);
@@ -224,6 +223,7 @@ export function ServiceRequestForm() {
       capacity: undefined,
       capacityUnit: "Mbps",
       notes: "",
+      website: "",
     },
   });
 
@@ -247,9 +247,9 @@ export function ServiceRequestForm() {
         return;
       }
 
-      const svc = SERVICE_OPTIONS.find((s) => s.id === values.serviceType);
+      const svc = services.find((s) => s.name === values.serviceType);
       setRecap({
-        title: svc?.title ?? String(values.serviceType),
+        title: svc?.name ?? String(values.serviceType),
         capacity: Number(values.capacity),
         unit: values.capacityUnit,
       });
@@ -331,6 +331,21 @@ export function ServiceRequestForm() {
       className="flex flex-col gap-8"
       noValidate
     >
+      {/* Honeypot anti-bot; diisi bot → zod 422 "Bot terdeteksi" */}
+      <div
+        aria-hidden
+        className="absolute left-0 top-0 h-0 w-0 overflow-hidden opacity-0 pointer-events-none"
+      >
+        <label htmlFor="website">Website</label>
+        <input
+          id="website"
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+          {...register("website")}
+        />
+      </div>
+
       {/* Data Perusahaan */}
       <section className="flex flex-col gap-4">
         <SectionTitle required>Data Perusahaan</SectionTitle>
@@ -384,8 +399,8 @@ export function ServiceRequestForm() {
           role="radiogroup"
           aria-label="Pilihan layanan"
         >
-          {SERVICE_OPTIONS.map((svc) => {
-            const selected = serviceType === svc.id;
+          {services.map((svc) => {
+            const selected = serviceType === svc.name;
             return (
               <button
                 key={svc.id}
@@ -394,7 +409,7 @@ export function ServiceRequestForm() {
                 aria-checked={selected}
                 data-selected={selected}
                 onClick={() =>
-                  setValue("serviceType", svc.id, {
+                  setValue("serviceType", svc.name, {
                     shouldValidate: true,
                   })
                 }
@@ -408,11 +423,8 @@ export function ServiceRequestForm() {
               >
                 <div className="relative h-36 w-full bg-muted/50 sm:h-40">
                   <ServiceImage
-                    src={svc.image}
-                    alt={svc.title}
-                    icon={svc.icon}
-                    accent={svc.accent}
-                    iconClassName="size-8"
+                    src={svc.imagePreview}
+                    alt={svc.name}
                   />
                   <div
                     aria-hidden
@@ -431,7 +443,7 @@ export function ServiceRequestForm() {
                       selected ? "text-primary" : "text-foreground",
                     ].join(" ")}
                   >
-                    {svc.title}
+                    {svc.name}
                   </p>
                   <p className="text-[11px] leading-snug text-muted-foreground">
                     {svc.subtitle}
@@ -547,7 +559,7 @@ export function ServiceRequestForm() {
 
       {/* ── Kanan: InfoAside (40%) ── */}
       <aside className="order-2 lg:sticky lg:top-24">
-        <InfoAside serviceType={serviceType} />
+        <InfoAside serviceType={serviceType} services={services} />
       </aside>
     </div>
   );
