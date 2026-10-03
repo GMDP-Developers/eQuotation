@@ -1,0 +1,103 @@
+@import "tailwindcss";
+
+:root {
+  --radius: 0.5rem;
+  /* ↓ background: cool gray — BUKAN almost-white */
+  --background: oklch(0.965 0.005 250);
+  --foreground: oklch(0.15 0.02 260);
+  --card: oklch(0.995 0.001 250);
+  --card-foreground: oklch(0.15 0.02 260);
+  --popover: oklch(0.995 0.001 250);
+  --popover-foreground: oklch(0.15 0.02 260);
+  --primary: oklch(0.40 0.06 255);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.96 0.003 250);
+  --secondary-foreground: oklch(0.30 0.02 260);
+  /* ↓ muted: lebih gelap dari background agar terlihat */
+  --muted: oklch(0.94 0.005 250);
+  --muted-foreground: oklch(0.55 0.015 260);
+  --accent: oklch(0.95 0.01 255);
+  --accent-foreground: oklch(0.30 0.03 255);
+  --destructive: oklch(0.55 0.2 25);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.88 0.006 250);
+  --input: oklch(0.88 0.006 250);
+  --ring: oklch(0.55 0.12 255);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}
+
+/* ── Solid primary button ── */
+.btn-brand {
+  background-color: var(--primary);
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+.btn-brand:hover {
+  background-color: oklch(0.35 0.07 255);
+  box-shadow: 0 2px 8px -2px oklch(0.35 0.07 255 / 0.35);
+}
+.btn-brand:active {
+  background-color: oklch(0.32 0.07 255);
+}
+
+/* ── Service card: subtle border transition ── */
+.card-lift {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.card-lift:hover {
+  border-color: oklch(0.70 0.01 260);
+}
+.card-lift[data-selected="true"] {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 1px oklch(0.40 0.06 255 / 0.12);
+}
+
+/* ── Success fade-in (replaces bounce pop) ── */
+@keyframes eq-pop {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-eq-pop {
+  animation: eq-pop 0.2s ease-out both;
+}

@@ -1,0 +1,33 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String // bcrypt hash (cost 12)
+  name      String?
+  role      String   @default("ADMIN")
+  createdAt DateTime @default(now())
+}
+
+model ServiceRequest {
+  id           String   @id @default(cuid())
+  companyName  String
+  contactName  String
+  position     String?
+  phone        String
+  email        String
+  serviceType  String // 'ULO' | 'Tier One' | 'Intermix' | 'Supermix'
+  capacity     Int
+  capacityUnit String // 'Mbps' | 'Gbps'
+  ipAddress    String?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
