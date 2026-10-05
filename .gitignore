@@ -47,3 +47,10 @@ next-env.d.ts
 *.db-*
 prisma/*.db
 prisma/*.db-*
+
+# local uploads — seed bawaan (ulo.jpg dkk) sudah tracked, tetap ikut repo
+/public/images/services/
+
+# process logs
+nohup.out
+*.log

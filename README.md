@@ -2,11 +2,12 @@
 
 Aplikasi 2 halaman:
 1. **Form publik** — permintaan layanan → SQLite. Anti-bot honeypot + rate limit 5/menit/IP. Layanan tampil dari DB (hanya yang aktif).
-2. **Admin dashboard** — login, tabel + paginasi, filter tanggal/layanan/status, ubah status (BARU→DIPROSES→SELESAI/DITOLAK), hapus, detail per baris, export Excel (server-side), audit trail. Notifikasi email permintaan baru (opsional, SMTP).
+2. **Admin dashboard** — login, tabel + paginasi, filter tanggal/layanan/status, ubah status (BARU→DIPROSES→SELESAI/DITOLAK), hapus, detail per baris, export Excel (server-side), audit trail.
 3. **Kelola layanan** — `/admin/services`: tambah/edit/hapus layanan (nama, subtitle, deskripsi, urutan, aktif/nonaktif) dengan **2 gambar**: preview (kartu layanan) + full (panel kanan). Upload jpg/png/webp/gif, maks 5MB, tersimpan di `public/images/services/`.
+4. **Pengaturan halaman & brand** — `/admin/settings`: nama brand, keterangan, dan logo (opsional; berlaku di semua permukaan — header publik, halaman login, sidebar admin, judul tab; kosong = ikon default), serta judul, deskripsi, poin, dan gambar panel "Tentang" halaman publik.
 
 ## Stack
-Next.js (App Router) · TypeScript · Tailwind + shadcn UI · Prisma + SQLite (WAL) · Auth.js (credentials) · xlsx · nodemailer
+Next.js (App Router) · TypeScript · Tailwind + shadcn UI · Prisma + SQLite (WAL) · Auth.js (credentials) · xlsx
 
 ## Menjalankan
 
@@ -51,11 +52,6 @@ NEXTAUTH_SECRET="<openssl rand -base64 32>"
 # NEXTAUTH_URL="https://domain-anda.com"   # production saja
 AUTH_TRUST_HOST=true
 SEED_ADMIN_PASSWORD="admin123"
-SMTP_HOST=""            # kosongkan = notifikasi email mati
-SMTP_PORT="587"
-SMTP_USER=""
-SMTP_PASS=""
-NOTIFY_EMAIL=""
 ```
 
 > **Production:** wajib ganti `SEED_ADMIN_PASSWORD` — login `admin123` ditolak otomatis

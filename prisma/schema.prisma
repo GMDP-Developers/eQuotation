@@ -42,14 +42,26 @@ model AuditLog {
 }
 
 model Service {
-  id          String   @id @default(cuid())
-  name        String   @unique
-  subtitle    String?
-  description String?
+  id           String   @id @default(cuid())
+  name         String   @unique
+  subtitle     String?
+  description  String?
   imagePreview String? // preview — tampil di kartu layanan (publik)
   imageFull    String? // gambar full — tampil di panel kanan (publik); fallback ke preview bila kosong
-  sortOrder   Int      @default(0)
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  sortOrder    Int      @default(0)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model SiteSetting {
+  id               String   @id @default("singleton")
+  aboutTitle       String
+  aboutDescription String
+  aboutImage       String? // opsional; bila kosong pakai preview layanan pertama
+  aboutBullets     String // newline-separated
+  brandName        String   @default("eQuotation")
+  brandSubtitle    String   @default("Service Request")
+  brandLogo        String? // path gambar di public/images/services; kosong = ikon default
+  updatedAt        DateTime @updatedAt
 }

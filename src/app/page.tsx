@@ -2,7 +2,7 @@ import { ArrowRight, Network } from "lucide-react";
 
 import { ServiceRequestForm } from "@/components/service-request-form";
 import { prisma } from "@/lib/db";
-import type { PublicService } from "@/types";
+import type { PublicAbout, PublicService } from "@/types";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +22,27 @@ export default async function HomePage() {
     active: s.active,
   }));
 
+  const setting = await prisma.siteSetting.findUnique({
+    where: { id: "singleton" },
+  });
+
+  const brandName = setting?.brandName ?? "eQuotation";
+  const brandSubtitle = setting?.brandSubtitle ?? "Service Request";
+  const brandLogo = setting?.brandLogo ?? null;
+  const about: PublicAbout = {
+    title: setting?.aboutTitle ?? "Tentang eQuotation",
+    description:
+      setting?.aboutDescription ??
+      "Sistem permintaan layanan jaringan korporat. Lengkapi formulir dan tim kami akan menghubungi Anda untuk penawaran.",
+    image: setting?.aboutImage ?? null,
+    bullets: setting
+      ? setting.aboutBullets
+          .split("\n")
+          .map((b) => b.trim())
+          .filter(Boolean)
+      : ["Penawaran sesuai kebutuhan kapasitas", "Respons cepat via WhatsApp"],
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* ── Thin accent line at very top ── */}
@@ -31,15 +52,24 @@ export default async function HomePage() {
       <header className="sticky top-0 z-40 border-b border-border bg-card">
         <div className="mx-auto flex w-full items-center justify-between px-5 py-4 sm:px-8">
           <div className="flex items-center gap-2.5">
-            <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Network className="size-4" />
-            </span>
+            {brandLogo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={brandLogo}
+                alt=""
+                className="size-9 rounded-lg object-cover"
+              />
+            ) : (
+              <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                <Network className="size-4" />
+              </span>
+            )}
             <div>
               <p className="text-sm font-semibold tracking-tight text-foreground">
-                eQuotation
+                {brandName}
               </p>
               <p className="text-[11px] text-muted-foreground">
-                Service Request
+                {brandSubtitle}
               </p>
             </div>
           </div>
@@ -71,14 +101,13 @@ export default async function HomePage() {
 
       {/* Form */}
       <main className="mx-auto w-full flex-1 px-5 pb-16 sm:px-8">
-        <ServiceRequestForm services={services} />
+        <ServiceRequestForm services={services} about={about} />
       </main>
 
       <footer className="border-t border-border bg-muted/60">
         <div className="mx-auto flex w-full px-5 py-6 sm:px-8">
           <p className="text-[12px] text-muted-foreground">
-            © {new Date().getFullYear()} eQuotation — Permintaan Layanan
-            Jaringan
+            © {new Date().getFullYear()} {brandName} — {brandSubtitle}
           </p>
         </div>
       </footer>

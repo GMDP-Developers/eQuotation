@@ -11,6 +11,13 @@ export type PublicService = {
   active: boolean;
 };
 
+export type PublicAbout = {
+  title: string;
+  description: string;
+  image: string | null;
+  bullets: string[];
+};
+
 export const CAPACITY_UNITS = ["Mbps", "Gbps"] as const;
 export type CapacityUnit = (typeof CAPACITY_UNITS)[number];
 

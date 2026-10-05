@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import {
   CAPACITY_UNITS,
   serviceRequestSchema,
+  type PublicAbout,
   type PublicService,
   type ServiceRequestInput,
   type CapacityUnit,
@@ -44,9 +45,25 @@ function ServiceImage({
   src: string | null;
   alt: string;
   className?: string;
-  fit?: "cover" | "contain";
+  fit?: "cover" | "contain" | "natural";
 }) {
   const [failed, setFailed] = useState(false);
+
+  if (fit === "natural") {
+    // width/height sekadar placeholder rasio; h-auto pakai rasio asli gambar
+    return src && !failed ? (
+      <Image
+        src={src}
+        alt={alt}
+        width={1600}
+        height={1200}
+        className="h-auto w-full"
+        onError={() => setFailed(true)}
+      />
+    ) : (
+      <div className="flex aspect-[4/3] w-full items-center justify-center bg-muted/60" />
+    );
+  }
 
   return (
     <div
@@ -74,9 +91,11 @@ function ServiceImage({
 function InfoAside({
   serviceType,
   services,
+  about,
 }: {
   serviceType?: string;
   services: PublicService[];
+  about: PublicAbout;
 }) {
   const service = services.find((s) => s.name === serviceType);
   const preview = services[0];
@@ -113,27 +132,25 @@ function InfoAside({
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
       {/* Preview gambar layanan pertama (bukan ikon) */}
-      <div className="relative aspect-[4/3] w-full bg-muted/50">
-        <ServiceImage
-          src={preview?.imagePreview ?? null}
-          alt={preview?.name ?? "eQuotation"}
-        />
-      </div>
+      {/* Gambar — lebar penuh panel; gambar panjang turun ke bawah (tinggi natural) */}
+      <ServiceImage
+        src={about.image ?? preview?.imagePreview ?? null}
+        alt={about.title}
+        fit="natural"
+      />
       <div className="flex flex-col gap-2 p-5">
         <h3 className="text-lg font-semibold tracking-tight text-foreground">
-          Tentang eQuotation
+          {about.title}
         </h3>
         <p className="text-[13px] leading-relaxed text-muted-foreground">
-          Sistem permintaan layanan jaringan korporat. Lengkapi formulir dan
-          tim kami akan menghubungi Anda untuk penawaran.
+          {about.description}
         </p>
         <ul className="mt-2 flex flex-col gap-1.5 text-[13px] text-foreground/80">
           {[
             services.length
               ? services.map((s) => s.name).join(" · ")
               : "ULO · Tier One · Intermix · Supermix",
-            "Penawaran sesuai kebutuhan kapasitas",
-            "Respons cepat via WhatsApp",
+            ...about.bullets,
           ].map((item) => (
             <li key={item} className="flex items-start gap-2">
               <Check
@@ -197,8 +214,10 @@ function Field({
 
 export function ServiceRequestForm({
   services,
+  about,
 }: {
   services: PublicService[];
+  about: PublicAbout;
 }) {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -559,7 +578,7 @@ export function ServiceRequestForm({
 
       {/* ── Kanan: InfoAside (40%) ── */}
       <aside className="order-2 lg:sticky lg:top-24">
-        <InfoAside serviceType={serviceType} services={services} />
+        <InfoAside serviceType={serviceType} services={services} about={about} />
       </aside>
     </div>
   );

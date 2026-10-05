@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import nodemailer from "nodemailer";
 
 import { prisma } from "@/lib/db";
 import { serviceRequestSchema } from "@/types";
@@ -65,41 +64,6 @@ export async function POST(req: Request) {
         notes: data.notes || null,
       },
     });
-
-    // fire-and-forget setelah 201; tanpa queue/retry — tambah kalau email kritis
-    if (process.env.SMTP_HOST && process.env.NOTIFY_EMAIL) {
-      const port = Number(process.env.SMTP_PORT ?? 587);
-      void nodemailer
-        .createTransport({
-          host: process.env.SMTP_HOST,
-          port,
-          secure: port === 465,
-          auth: process.env.SMTP_USER
-            ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
-            : undefined,
-        })
-        .sendMail({
-          from: process.env.SMTP_USER || process.env.NOTIFY_EMAIL,
-          to: process.env.NOTIFY_EMAIL,
-          subject: `[eQuotation] Permintaan baru: ${created.companyName} - ${created.serviceType}`,
-          text: [
-            "Permintaan quotation baru diterima.",
-            "",
-            `Perusahaan: ${created.companyName}`,
-            `Kontak: ${created.contactName}`,
-            `Jabatan: ${created.position ?? "-"}`,
-            `Telepon: ${created.phone}`,
-            `Email: ${created.email}`,
-            `Layanan: ${created.serviceType}`,
-            `Kapasitas: ${created.capacity} ${created.capacityUnit}`,
-            `IP: ${ip}`,
-            `Catatan: ${created.notes ?? "-"}`,
-            `Dibuat: ${created.createdAt.toISOString()}`,
-          ].join("\n"),
-        })
-        .catch((err) => console.error("notifikasi email gagal:", err));
-    }
-
     return NextResponse.json(
       { ok: true, id: created.id },
       { status: 201 }
