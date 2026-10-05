@@ -25,6 +25,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { CableMap } from "@/components/cable-map";
 
 
 type Recap = {
@@ -414,7 +415,7 @@ export function ServiceRequestForm({
       <section className="flex flex-col gap-4">
         <SectionTitle required>Pilih Layanan</SectionTitle>
         <div
-          className="grid grid-cols-2 gap-3 sm:grid-cols-4"
+          className="grid grid-cols-2 gap-3"
           role="radiogroup"
           aria-label="Pilihan layanan"
         >
@@ -566,8 +567,8 @@ export function ServiceRequestForm({
 
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[3fr_2fr] lg:items-start lg:gap-8">
-      {/* ── Kiri: Form (60%) ── */}
+    <div className="grid gap-6 lg:grid-cols-2 lg:items-start lg:gap-8">
+      {/* ── Kiri: Form (50%) ── */}
       <div className="order-1 min-w-0 overflow-hidden rounded-lg border border-border bg-card shadow-sm">
         <div
           className="h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent"
@@ -576,9 +577,16 @@ export function ServiceRequestForm({
         <div className="p-5 sm:p-7">{form}</div>
       </div>
 
-      {/* ── Kanan: InfoAside (40%) ── */}
+      {/* ── Kanan: CableMap + InfoAside (50%) ── */}
       <aside className="order-2 lg:sticky lg:top-24">
-        <InfoAside serviceType={serviceType} services={services} about={about} />
+        <div className="space-y-6">
+          <CableMap />
+          <InfoAside
+            serviceType={serviceType}
+            services={services}
+            about={about}
+          />
+        </div>
       </aside>
     </div>
   );

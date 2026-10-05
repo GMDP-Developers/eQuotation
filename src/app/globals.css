@@ -23,6 +23,12 @@
   --border: oklch(0.88 0.006 250);
   --input: oklch(0.88 0.006 250);
   --ring: oklch(0.55 0.12 255);
+  /* warna kabel alternatif — MCS hijau-olive (upstream #b0c335); B2JS oranye (upstream hijau
+     #31b34a, digeser agar tidak bentrok dengan MCS). Lightness ditahan ≤0.54 supaya teks label
+     yang memakai warna yang sama tetap kontras ≥4.5:1 di atas laut (--muted) dan daratan (--card). */
+  --cable-2: oklch(0.51 0.13 125);
+  --cable-3: oklch(0.53 0.15 55);
+  --cable-4: oklch(0.54 0.17 345);
 }
 
 @theme inline {
@@ -45,6 +51,9 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-cable-2: var(--cable-2);
+  --color-cable-3: var(--cable-3);
+  --color-cable-4: var(--cable-4);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --radius-sm: calc(var(--radius) - 2px);
