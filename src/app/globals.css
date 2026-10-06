@@ -29,6 +29,7 @@
   --cable-2: oklch(0.51 0.13 125);
   --cable-3: oklch(0.53 0.15 55);
   --cable-4: oklch(0.54 0.17 345);
+  --cable-5: oklch(0.55 0.12 220);
 }
 
 @theme inline {
@@ -54,6 +55,7 @@
   --color-cable-2: var(--cable-2);
   --color-cable-3: var(--cable-3);
   --color-cable-4: var(--cable-4);
+  --color-cable-5: var(--cable-5);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --radius-sm: calc(var(--radius) - 2px);

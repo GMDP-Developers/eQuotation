@@ -88,47 +88,15 @@ function ServiceImage({
   );
 }
 
-/** Panel kanan: preview layanan terpilih (kiri: kartu preview; kanan: gambar full). */
+/** Panel kanan default (konten dari setting about) — tampil di atas info layanan terpilih. */
 function InfoAside({
-  serviceType,
   services,
   about,
 }: {
-  serviceType?: string;
   services: PublicService[];
   about: PublicAbout;
 }) {
-  const service = services.find((s) => s.name === serviceType);
   const preview = services[0];
-
-  if (service) {
-    return (
-      <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
-        {/* Gambar full — seluruh gambar tampil, tanpa crop */}
-        <div className="relative aspect-[16/10] w-full bg-muted/50">
-          <ServiceImage
-            src={service.imageFull ?? service.imagePreview}
-            alt={service.name}
-            fit="contain"
-          />
-        </div>
-        <div className="flex flex-col gap-2 p-5">
-          <span className="w-fit rounded-md bg-primary/10 px-2.5 py-0.5 text-[11px] font-medium text-primary">
-            Anda memilih
-          </span>
-          <h3 className="text-lg font-semibold tracking-tight text-foreground">
-            {service.name}
-          </h3>
-          <p className="text-[12px] font-medium text-muted-foreground">
-            {service.subtitle}
-          </p>
-          <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">
-            {service.description}
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
@@ -162,6 +130,35 @@ function InfoAside({
             </li>
           ))}
         </ul>
+      </div>
+    </div>
+  );
+}
+
+/** Kartu info layanan terpilih — tampil di bawah panel default saat ada pilihan. */
+function SelectedServiceInfo({ service }: { service: PublicService }) {
+  return (
+    <div className="mt-6 overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+      <div className="relative aspect-[16/10] w-full bg-muted/50">
+        <ServiceImage
+          src={service.imageFull ?? service.imagePreview}
+          alt={service.name}
+          fit="contain"
+        />
+      </div>
+      <div className="flex flex-col gap-2 p-5">
+        <span className="w-fit rounded-md bg-primary/10 px-2.5 py-0.5 text-[11px] font-medium text-primary">
+          Anda memilih
+        </span>
+        <h3 className="text-lg font-semibold tracking-tight text-foreground">
+          {service.name}
+        </h3>
+        <p className="text-[12px] font-medium text-muted-foreground">
+          {service.subtitle}
+        </p>
+        <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">
+          {service.description}
+        </p>
       </div>
     </div>
   );
@@ -249,6 +246,7 @@ export function ServiceRequestForm({
 
   const serviceType = watch("serviceType");
   const capacityUnit = watch("capacityUnit");
+  const selectedService = services.find((s) => s.name === serviceType);
 
   async function onSubmit(values: ServiceRequestInput) {
     setSubmitting(true);
@@ -577,16 +575,23 @@ export function ServiceRequestForm({
         <div className="p-5 sm:p-7">{form}</div>
       </div>
 
-      {/* ── Kanan: CableMap + InfoAside (50%) ── */}
+      {/* ── Kanan: CableMap + InfoAside (50%) — peta menutup saat layanan dipilih ── */}
       <aside className="order-2 lg:sticky lg:top-24">
-        <div className="space-y-6">
-          <CableMap />
-          <InfoAside
-            serviceType={serviceType}
-            services={services}
-            about={about}
-          />
+        {/* ponytail: animasi grid-template-rows 0fr↔1fr tanpa tinggi tetap;
+            bila browser tak interpolasi, lompatan instan — fungsi tetap jalan */}
+        <div
+          className={`grid transition-[grid-template-rows] duration-500 ease-out ${
+            serviceType ? "grid-rows-[0fr]" : "grid-rows-[1fr]"
+          }`}
+        >
+          <div className="min-h-0 overflow-hidden">
+            <div className="pb-6">
+              <CableMap />
+            </div>
+          </div>
         </div>
+        <InfoAside services={services} about={about} />
+        {selectedService ? <SelectedServiceInfo service={selectedService} /> : null}
       </aside>
     </div>
   );
