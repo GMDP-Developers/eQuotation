@@ -25,12 +25,12 @@ const B2JS: [number, number][] = [
   [104.2, 0.5], [103.946, 1.327],
 ];
 
-// RISING 8 route (lon, lat), Singapore ↔ Tanjung Bemban/Tanjung Pakis; source:
+// RISING 8 route (lon, lat), Singapore ↔ Jakarta; source:
 // submarinecablemap.com cable-geo.json, 2026-10-05 — 2 segmen (MultiLineString),
-// warna magenta mengikuti upstream #954098.
+// warna magenta mengikuti upstream #954098; endpoint Tanjung Pakis digabung ke Jakarta.
 const R8: [number, number][][] = [
   [[104.133, 1.174], [103.987, 1.375]],
-  [[107.121, -5.981], [106.411, -4.603], [106.979, -2.961], [106.516, -1.514], [105.407, 0.176],
+  [[106.8279, -6.1716], [106.411, -4.603], [106.979, -2.961], [106.516, -1.514], [105.407, 0.176],
   [104.941, 0.723], [104.538, 0.869], [104.133, 1.174]],
 ];
 
@@ -41,7 +41,7 @@ const OWN: [number, number][] = [
   [110.6, -7.45], [111.4, -7.4], [112.2, -7.35], [112.7538, -7.2573],
 ];
 
-// Titik awal (Singapura), titik landing kabel (Jakarta, Tanjung Pakis), dan
+// Titik awal (Singapura), titik landing kabel (Jakarta), dan
 // landing kabel milik sendiri (Surabaya); titik perantara lain dihapus atas permintaan.
 // submarinecablemap.com landing-point-geo.json 2026-10-05 (OWN: jalur internal).
 // `dx/dy` = offset label (unit user, dx negatif → teks rata kanan); diatur agar tidak bertumpuk.
@@ -58,10 +58,8 @@ const LANDINGS: {
 }[] = [
   // ASC (Australia-Singapore Cable)
   { id: "tanah-merah-singapore", label: "SINGAPORE", tone: "fill-primary", at: [103.9466, 1.3273], dx: -7, dy: 3 },
-  // MCS (Matrix Cable System)
+  // Jakarta — landing bersama ASC / MCS / RISING 8
   { id: "jakarta-indonesia", label: "JAKARTA", tone: "fill-cable-2", labelTone: "fill-primary", at: [106.8279, -6.1716], dx: -7, dy: 3 },
-  // RISING 8
-  { id: "tanjung-pakis-indonesia", label: "TANJUNG PAKIS", tone: "fill-cable-4", at: [107.1209, -5.9813], dx: 7, dy: 5 },
   // OWN (kabel milik sendiri)
   { id: "surabaya-indonesia", label: "SURABAYA", tone: "fill-cable-5", at: [112.7538, -7.2573], dx: 7, dy: 12 },
 ];
