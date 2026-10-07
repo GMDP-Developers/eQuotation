@@ -35,6 +35,7 @@ export async function GET() {
           aboutDescription: setting.aboutDescription,
           aboutImage: setting.aboutImage,
           aboutBullets: setting.aboutBullets,
+          aboutEnabled: setting.aboutEnabled,
           brandName: setting.brandName,
           brandSubtitle: setting.brandSubtitle,
           brandLogo: setting.brandLogo,

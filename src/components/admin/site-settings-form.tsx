@@ -146,7 +146,7 @@ export function SiteSettingsForm({
           <div className="flex justify-between items-center">
             <CardTitle>Halaman Publik</CardTitle>
             <div className="flex items-center gap-2 text-sm font-normal">
-              <input type="checkbox" name="aboutEnabled" value="on" defaultChecked={aboutEnabled} onChange={(e) => setAboutEnabled(e.target.checked)} />
+              <input type="checkbox" name="aboutEnabled" value="on" checked={aboutEnabled} onChange={(e) => setAboutEnabled(e.target.checked)} />
               <Label className="cursor-pointer">Panel Tentang Aktif</Label>
             </div>
           </div>

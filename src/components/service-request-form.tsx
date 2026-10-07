@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Check, CheckCircle2, Loader2, Lock, RotateCcw, Send } from "lucide-react";
+import { Check, CheckCircle2, Loader2, Lock, PackageSearch, RotateCcw, Send } from "lucide-react";
 import { toast } from "sonner";
 
 import { CAPACITY_UNITS, serviceRequestSchema, type PublicAbout, type PublicService, type ServiceRequestInput, type CapacityUnit } from "@/types";
@@ -108,9 +108,31 @@ function InfoAside({
   );
 }
 
+function ServiceDetailPlaceholder() {
+  return (
+    <div className={cn(cardShell, "animate-slide-fade")}>
+      <div className="flex flex-col items-center justify-center gap-3 px-6 py-10 text-center">
+        <div className="flex size-12 items-center justify-center rounded-full bg-muted">
+          <PackageSearch className="size-5 text-muted-foreground" strokeWidth={1.75} />
+        </div>
+        <div className="space-y-1.5">
+          <p className="text-sm font-medium tracking-tight text-foreground">
+            Pilih Produk untuk Melihat Detailnya
+          </p>
+          <p className="mx-auto max-w-[30ch] text-[13px] leading-relaxed text-muted-foreground">
+            Silakan pilih salah satu layanan pada formulir. Informasi lengkap
+            produk akan ditampilkan di panel ini.
+          </p>
+        </div>
+        <div aria-hidden className="mt-1 h-px w-10 bg-border" />
+      </div>
+    </div>
+  );
+}
+
 function SelectedServiceInfo({ service }: { service: PublicService }) {
   return (
-    <div className={cn(cardShell, "mt-6")}>
+    <div className={cardShell}>
       <div className="relative mx-[10%] aspect-[16/10] w-[80%] bg-muted/50">
         <ServiceImage
           src={service.imageFull ?? service.imagePreview}
@@ -164,19 +186,22 @@ function Field({
   label,
   error,
   className,
+  required,
   ...props
 }: {
   id: string;
   label: string;
   error?: string;
   className?: string;
+  required?: boolean;
 } & React.ComponentProps<typeof Input>) {
   return (
     <div className="flex flex-col gap-1.5">
       <Label htmlFor={id} className="text-[13px]">
         {label}
+        {required ? <span className="ml-0.5 text-destructive">*</span> : null}
       </Label>
-      <Input id={id} className={className ?? inputClass} {...props} />
+      <Input id={id} required={required} className={className ?? inputClass} {...props} />
       <FieldError message={error} />
     </div>
   );
@@ -352,6 +377,7 @@ export function ServiceRequestForm({
             label="Nama Perusahaan"
             placeholder="PT Contoh Jaya"
             error={errors.companyName?.message}
+            required
             {...register("companyName")}
           />
           <Field
@@ -359,6 +385,7 @@ export function ServiceRequestForm({
             label="Nama Kontak"
             placeholder="Budi Santoso"
             error={errors.contactName?.message}
+            required
             {...register("contactName")}
           />
           <Field
@@ -366,6 +393,7 @@ export function ServiceRequestForm({
             label="Jabatan"
             placeholder="IT Manager"
             error={errors.position?.message}
+            required
             {...register("position")}
           />
           <Field
@@ -373,6 +401,7 @@ export function ServiceRequestForm({
             label="Nomor Telepon / WhatsApp"
             placeholder="0812xxxxxxx"
             error={errors.phone?.message}
+            required
             {...register("phone")}
           />
           <div className="sm:col-span-2">
@@ -382,6 +411,7 @@ export function ServiceRequestForm({
               type="email"
               placeholder="nama@perusahaan.co.id"
               error={errors.email?.message}
+              required
               {...register("email")}
             />
           </div>
@@ -488,10 +518,11 @@ export function ServiceRequestForm({
           </div>
 
           <div className="flex flex-1 flex-col gap-2.5">
-            <SectionTitle>Catatan Tambahan</SectionTitle>
+            <SectionTitle required>Catatan Tambahan</SectionTitle>
             <textarea
               id="notes"
               rows={3}
+              required
               placeholder="Kebutuhan spesifik, lokasi instalasi, target waktu…"
               className="w-full resize-y rounded-lg border border-input bg-background px-3 py-2.5 text-[14px] transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] md:text-sm"
               {...register("notes")}
@@ -527,46 +558,37 @@ export function ServiceRequestForm({
   const hasSelection = !!serviceType;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2 lg:items-start lg:gap-8">
-      <div className={cn(cardShell, "reveal-up reveal-delay-3 order-1 min-w-0")}>
-        <div className="h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" aria-hidden />
-        <div className="p-5 sm:p-7">{form}</div>
+    <div className="flex flex-col gap-6">
+      <div className="reveal-up reveal-delay-2">
+        <CableMap />
       </div>
-      <aside className="reveal-up reveal-delay-4 order-2 lg:sticky lg:top-24">
-        {/* InfoAside - collapse/hilang saat hasSelection */}
-        <div
-          className={cn(
-            `grid transition-[grid-template-rows] duration-700 ${easeSpring}`,
-            hasSelection ? "grid-rows-[0fr]" : "grid-rows-[1fr]"
-          )}
-        >
-          <div className="min-h-0 overflow-hidden">
+
+      <div className="grid gap-6 lg:grid-cols-2 lg:items-start lg:gap-8">
+        <div className={cn(cardShell, "reveal-up reveal-delay-3 order-1 min-w-0")}>
+          <div className="h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" aria-hidden />
+          <div className="p-5 sm:p-7">{form}</div>
+        </div>
+        <aside className="reveal-up reveal-delay-4 order-2 flex flex-col gap-6 lg:sticky lg:top-24">
+          {about && (
             <div
               className={cn(
-                `pb-6 transition-[transform,opacity,filter] duration-700 ${easeSpring} will-change-transform`,
-                hasSelection ? "-translate-y-8 scale-[0.97] opacity-0 blur-[2px]" : "translate-y-0 scale-100 opacity-100 blur-0"
+                `transition-transform duration-700 ${easeSpring} will-change-transform`,
+                hasSelection ? "-translate-y-1" : "translate-y-0"
               )}
             >
-              {about && <InfoAside services={services} about={about} />}
+              <InfoAside services={services} about={about} />
             </div>
-          </div>
-        </div>
-
-        <div
-          className={cn(
-            `grid transition-[grid-template-rows,opacity] duration-500 ${easeSpring}`,
-            selectedService ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
           )}
-        >
-          <div className="min-h-0 overflow-hidden">
-            {selectedService ? (
-              <div key={selectedService.id} className="animate-slide-fade">
-                <SelectedServiceInfo service={selectedService} />
-              </div>
-            ) : null}
-          </div>
-        </div>
-      </aside>
+
+          {selectedService ? (
+            <div key={selectedService.id} className="animate-slide-fade">
+              <SelectedServiceInfo service={selectedService} />
+            </div>
+          ) : (
+            <ServiceDetailPlaceholder />
+          )}
+        </aside>
+      </div>
     </div>
   );
 }

@@ -83,11 +83,12 @@ const LAND: [number, number][][] = [
 // Equirectangular with cos(mid-lat) correction; OX/OY menaruh rute di tengah bingkai 520 lebar.
 const VIEW = 520;
 const LON0 = 103.0, LON1 = 113.7, LAT0 = -18.9, LAT1 = 2.6;
+const ZOOM = 0.9;
 const KX = Math.cos((-8.125 * Math.PI) / 180); // ≈0.9899
-const K = (VIEW * 0.96) / (LAT1 - LAT0); // ≈23.22 px/deg latitude
+const K = ((VIEW * 0.96) / (LAT1 - LAT0)) * ZOOM;
 const W = (LON1 - LON0) * KX * K; // ≈246 px route width
 const OX = (VIEW - W) / 2; // ≈137
-const OY = (VIEW - (LAT1 - LAT0) * K) / 2; // ≈10
+const OY = (VIEW - (LAT1 - LAT0) * K) / 2 - 15;
 const px = ([lon, lat]: [number, number]) =>
   `${(OX + (lon - LON0) * KX * K).toFixed(1)},${(OY + (LAT1 - lat) * K).toFixed(1)}`;
 const P = LANDINGS.map((l) => ({
@@ -109,7 +110,7 @@ const OWN_D = "M" + OWN.map(px).join(" L");
  */
 const FRAME_H = (VIEW * 8) / 16;
 
-const z = 1;
+const z = 1 / ZOOM;
 
 /** Angka viewBox/atribut tanpa desimal bila bulat. */
 const num = (v: number) => Number(v.toFixed(3));
@@ -143,7 +144,7 @@ function CablePath({ d, className, dash }: { d: string; className: string; dash?
 export function CableMap() {
   return (
     <div className="relative w-full overflow-hidden rounded-lg border border-border bg-card shadow-sm">
-      <div className="relative aspect-[16/8] bg-muted">
+      <div className="relative aspect-[16/4] bg-muted">
         <svg
           className="absolute h-full w-full"
           viewBox={`0 0 ${num(VIEW)} ${num(FRAME_H)}`}
@@ -208,7 +209,7 @@ export function CableMap() {
           latency average 12ms
         </div>
       </div>
-      <ul className="flex flex-col gap-1.5 border-t border-border px-4 py-3 text-[12px] text-muted-foreground">
+      <ul className="flex items-center justify-between gap-x-4 gap-y-1.5 overflow-x-auto border-t border-border px-4 py-3 text-[12px] text-muted-foreground">
         {[
           {
             code: "ASC",
@@ -242,14 +243,13 @@ export function CableMap() {
             text: "(via darat)",
           },
         ].map((c) => (
-          <li key={c.code} className="flex items-center gap-2">
-            <span className={`shrink-0 rounded px-1.5 py-0.5 text-[11px] font-semibold ${c.tint}`}>
+          <li key={c.code} className="flex shrink-0 items-center gap-2 whitespace-nowrap">
+            <span className={`rounded px-1.5 py-0.5 text-[11px] font-semibold ${c.tint}`}>
               {c.code}
             </span>
             <span className={`w-6 shrink-0 self-center border-t-2 ${c.swatch}`} />
-            <span>
-              <span className="text-foreground/80">{c.name}</span> · {c.text}
-            </span>
+            <span className="text-foreground/80">{c.name}</span>
+            {c.text ? <span>· {c.text}</span> : null}
           </li>
         ))}
       </ul>

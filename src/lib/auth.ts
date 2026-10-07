@@ -72,8 +72,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const user = await prisma.user.findUnique({ where: { username } });
         if (!user) return null;
 
-        if (process.env.NODE_ENV === "production" && password === "admin123") return null;
-
         const ok = await bcrypt.compare(password, user.password);
         if (!ok) return null;
         if (user.role !== "ADMIN") return null;

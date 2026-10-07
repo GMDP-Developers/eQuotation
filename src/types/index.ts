@@ -46,7 +46,11 @@ export const serviceRequestSchema = z.object({
     .trim()
     .min(2, "Nama kontak minimal 2 karakter")
     .max(120, "Maksimal 120 karakter"),
-  position: z.string().trim().max(120, "Maksimal 120 karakter").optional(),
+  position: z
+    .string()
+    .trim()
+    .min(2, "Jabatan minimal 2 karakter")
+    .max(120, "Maksimal 120 karakter"),
   phone: z
     .string()
     .trim()
@@ -59,7 +63,11 @@ export const serviceRequestSchema = z.object({
     .positive("Kapasitas harus lebih dari 0")
     .max(10_000_000, "Kapasitas terlalu besar"),
   capacityUnit: z.enum(CAPACITY_UNITS, "Pilih satuan kapasitas"),
-  notes: z.string().trim().max(1000, "Maksimal 1000 karakter").optional(),
+  notes: z
+    .string()
+    .trim()
+    .min(1, "Catatan wajib diisi")
+    .max(1000, "Maksimal 1000 karakter"),
   // Honeypot anti-bot: harus kosong. Isian non-kosong = bot.
   website: z.string().max(0, "Bot terdeteksi").optional(),
 });

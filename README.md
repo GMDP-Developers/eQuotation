@@ -1,10 +1,10 @@
 # eQuotation — Formulir Permintaan Layanan & Admin Dashboard
 
 Aplikasi 2 halaman:
-1. **Form publik** — permintaan layanan → SQLite. Anti-bot honeypot + rate limit 5/menit/IP. Layanan tampil dari DB (hanya yang aktif).
+1. **Form publik** — permintaan layanan → SQLite. Anti-bot honeypot + rate limit. Layanan tampil dari DB (hanya yang aktif). Semua field wajib diisi. Panel kanan menampilkan **peta jalur kabel** (Singapura–Jakarta–Surabaya) dan detail produk terpilih; sebelum memilih layanan tampil placeholder "Pilih Produk untuk Melihat Detailnya".
 2. **Admin dashboard** — login, tabel + paginasi, filter tanggal/layanan/status, ubah status (BARU→DIPROSES→SELESAI/DITOLAK), hapus, detail per baris, export Excel (server-side), audit trail.
-3. **Kelola layanan** — `/admin/services`: tambah/edit/hapus layanan (nama, subtitle, deskripsi, urutan, aktif/nonaktif) dengan 2 gambar: preview (kartu layanan) + full (panel kanan). Upload jpg/png/webp/gif, maks 5MB, tersimpan di `public/images/services/`.
-4. **Pengaturan halaman & brand** — `/admin/settings`: nama brand, keterangan, dan logo (opsional; berlaku di semua permukaan — header publik, halaman login, sidebar admin, judul tab; kosong = ikon default), serta judul, deskripsi, poin, dan gambar panel "Tentang" halaman publik.
+3. **Kelola layanan** — `/admin/services`: tambah/edit/hapus layanan (nama, subtitle, deskripsi, urutan, aktif/nonaktif, best seller, kapasitas terkunci) dengan 2 gambar: preview (kartu layanan) + full (panel kanan). Upload jpg/png/webp/gif, maks 5MB, tersimpan di `public/images/services/`.
+4. **Pengaturan halaman & brand** — `/admin/settings`: nama brand, keterangan, dan logo (opsional; berlaku di semua permukaan — header publik, halaman login, sidebar admin, judul tab; kosong = ikon default), serta judul, deskripsi, poin, gambar, dan **toggle "Panel Tentang Aktif"** (matikan panel "Tentang" halaman publik tanpa menghapus isinya).
 
 ## Stack
 Next.js (App Router) · TypeScript · Tailwind + shadcn UI · Prisma + SQLite (WAL) · Auth.js (credentials) · xlsx
@@ -42,7 +42,7 @@ npm install
 npm run setup
 ```
 `setup` = `node scripts/setup-env.mjs` + `prisma migrate deploy` + `prisma db seed`:
-- Buat `.env` jika belum ada (generate `NEXTAUTH_SECRET` random 32 byte). Jika `.env` sudah ada tapi masih `dev-secret...`, akan di-random otomatis.
+- Buat `.env` jika belum ada (generate `NEXTAUTH_SECRET` + `AUTH_SECRET` random 32 byte). Jika `.env` sudah ada tapi secret-nya masih placeholder/`dev-secret...`, akan di-random + `AUTH_SECRET` ditambahkan otomatis.
 - Buat semua tabel SQLite `prisma/prod.db`.
 - Seed admin `admin / admin123` + 9 layanan + setting brand (idempoten — tidak timpa editan admin saat re-run).
 
@@ -50,6 +50,7 @@ Cek `.env` yang terbuat:
 ```
 DATABASE_URL="file:./prod.db"
 NEXTAUTH_SECRET="<random base64 32>"
+AUTH_SECRET="<random base64 32>"   # Auth.js v5; sinkron dengan NEXTAUTH_SECRET
 AUTH_TRUST_HOST=true
 SEED_ADMIN_PASSWORD="admin123"
 ```
@@ -108,18 +109,19 @@ pm2 save && pm2 startup
 |  | `npm run dev` (`NODE_ENV=development`) | `npm run build && npm start` (`NODE_ENV=production`) |
 |---|---|---|
 | Performa | Lambat, source map, hot-reload | Minify + cache, 10/10 static pages |
-| Login `admin/admin123` | **Bisa** | **Ditolak** — `src/lib/auth.ts` blokir `admin123` di production |
-| `SEED_ADMIN_PASSWORD` | Default `admin123` boleh | Wajib ganti di `.env` |
+| Login `admin/admin123` | **Bisa** | **Bisa** — tidak ada blokiran khusus; untuk deployment publik **disarankan ganti password** |
+| `SEED_ADMIN_PASSWORD` | Default `admin123` boleh | Seed production wajib set variabel ini (seed menolak default tanpa env) |
 | `ALLOWED_DEV_ORIGINS` | Aktif — untuk akses LAN/IP lain | Tidak berpengaruh |
 | `AUTH_TRUST_HOST` | `true` | `true` — sama (ikut Host NAT) |
 | Prisma | `prisma migrate dev` (buat migration baru) | `prisma migrate deploy` (apply saja, dipakai `setup`) |
 
 **Cara ganti:** cukup ganti command. Tidak ada file lain yang perlu diedit untuk NAT.
 
-Jika lupa password di server production (tidak bisa login karena `admin123` ditolak):
+Ganti password admin (disarankan di production publik):
 ```bash
 npm run admin:reset-password -- admin PasswordBaru123
 ```
+Reset menghapus sesi aktif user tersebut (wajib login ulang).
 
 ### 7. Catatan NAT / Reverse Proxy
 - **DNAT murni** (`IP_PUBLIK → 10.x:3000`): tanpa Nginx, cukup `AUTH_TRUST_HOST=true` — sudah handle.
@@ -137,8 +139,10 @@ proxy_pass http://10.202.10.15:3000;
 - Username: `admin`
 - Password: `admin123` (atau nilai `SEED_ADMIN_PASSWORD` di `.env`)
 - Halaman: `/login` → `/admin/dashboard`
+- Rate limit login: 5 percobaan / 15 menit / IP (in-memory — reset saat server restart)
 - Lupa password di server: `npm run admin:reset-password -- admin PasswordBaru123`
 - Ganti password/username dari dashboard: `/admin/account` (butuh password lama; ganti password akan logout sesi lain otomatis, daftar sesi tampil di bawah form)
+- Deployment publik: **ganti password default** `admin123` setelah setup.
 
 ## Kelola Layanan
 Semua layanan dikelola dari dashboard `/admin/services` (nama, subtitle, deskripsi, urutan, status aktif) dengan dua gambar per layanan: **gambar preview** (tampil di kartu layanan sisi kiri) dan **gambar full** (tampil di panel kanan, tanpa crop). Jika gambar full belum diisi, panel kanan memakai gambar preview.
@@ -153,7 +157,8 @@ Seed (`npm run db:seed`) hanya mengisi 9 layanan + setting brand (idempoten — 
 | `npm start` | Start production (`NODE_ENV=production`) |
 | `npm run setup` | **VM baru:** `.env` + migrate + seed (sekali, idempoten) |
 | `npm run lint` | ESLint |
-| `npm run db:migrate` | Prisma migrate dev |
+| `npm run db:migrate` | Prisma migrate dev (buat migration baru) |
+| `npm run db:push` | Push schema Prisma langsung ke DB (tanpa migration file) |
 | `npm run db:seed` | Seed admin + layanan (idempoten) |
 | `npm run admin:reset-password -- <user> <pass>` | Reset password via terminal (tanpa password lama) |
 
@@ -162,8 +167,10 @@ Seed (`npm run db:seed`) hanya mengisi 9 layanan + setting brand (idempoten — 
 ```
 DATABASE_URL="file:./prod.db"
 NEXTAUTH_SECRET="<random 32 byte>"
+AUTH_SECRET="<random 32 byte>"   # wajib ada untuk Auth.js v5; sinkron NEXTAUTH_SECRET
 AUTH_TRUST_HOST=true
 SEED_ADMIN_PASSWORD="admin123"
 # Opsional dev: ALLOWED_DEV_ORIGINS="10.202.10.15"
 ```
-> Production: ganti `SEED_ADMIN_PASSWORD` lalu `npm run admin:reset-password -- admin <pass-baru>` (seed tidak timpa password yang sudah ada, dan `admin123` ditolak saat `NODE_ENV=production`).
+- **Secret placeholder** (`<openssl rand -base64 32>`): bila ketahuan di `.env`, jalankan `node scripts/setup-env.mjs` — akan diganti random + `AUTH_SECRET` ditambahkan.
+- Production publik: ganti `SEED_ADMIN_PASSWORD`, jalankan `npm run db:seed` (atau `npm run admin:reset-password -- admin <pass-baru>`). Seed tidak menimpa password user yang sudah ada.
