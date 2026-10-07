@@ -93,7 +93,7 @@ export function LoginPanel({
             <img
               src={brandLogo}
               alt=""
-              className="size-11 rounded-xl object-cover"
+              className="h-11 w-auto max-w-40 object-contain"
             />
           ) : (
             <span className="flex size-11 items-center justify-center rounded-xl bg-white/15 text-white shadow-lg ring-1 ring-white/25">
@@ -140,7 +140,7 @@ export function LoginPanel({
               <img
                 src={brandLogo}
                 alt=""
-                className="size-10 rounded-xl object-cover"
+                className="h-10 w-auto max-w-36 object-contain"
               />
             ) : (
               <span className="text-brand-gradient flex size-10 items-center justify-center rounded-xl text-primary-foreground shadow-md">

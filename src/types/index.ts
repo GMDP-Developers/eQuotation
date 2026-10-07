@@ -9,6 +9,9 @@ export type PublicService = {
   imageFull: string | null;
   sortOrder: number;
   active: boolean;
+  bestSeller: boolean;
+  lockedCapacity: number | null;
+  lockedCapacityUnit: CapacityUnit | null;
 };
 
 export type PublicAbout = {
@@ -19,6 +22,11 @@ export type PublicAbout = {
 };
 
 export const CAPACITY_UNITS = ["Mbps", "Gbps"] as const;
+
+/** Normalisasi satuan dari DB (string bebas) ke union yang dipakai form. */
+export function toCapacityUnit(value: string | null | undefined): CapacityUnit | null {
+  return CAPACITY_UNITS.find((u) => u === value) ?? null;
+}
 export type CapacityUnit = (typeof CAPACITY_UNITS)[number];
 
 export const SERVICE_STATUS = [

@@ -2,10 +2,11 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Star, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import { CAPACITY_UNITS, type CapacityUnit } from "@/types";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -40,6 +41,9 @@ export type ServiceData = {
   imageFull: string | null;
   sortOrder: number;
   active: boolean;
+  bestSeller: boolean;
+  lockedCapacity: number | null;
+  lockedCapacityUnit: CapacityUnit | null;
   createdAt: string;
 };
 
@@ -65,6 +69,16 @@ export function ServicesManager({ services }: { services: ServiceData[] }) {
     for (const key of ["imagePreview", "imageFull"]) {
       const entry = fd.get(key);
       if (entry instanceof File && entry.size === 0) fd.delete(key);
+    }
+    // Kunci kapasitas: kirim "" bila toggle mati supaya API melepas kunci.
+    const lockChecked = Boolean(
+      (form.elements.namedItem("lockEnabled") as HTMLInputElement | null)?.checked
+    );
+    if (!lockChecked) {
+      fd.set("lockedCapacity", "");
+    } else if (!String(fd.get("lockedCapacity") ?? "").trim()) {
+      toast.error("Isi nilai kapasitas yang dikunci, mis. 100.");
+      return;
     }
     setSubmitting(true);
     try {
@@ -110,6 +124,33 @@ export function ServicesManager({ services }: { services: ServiceData[] }) {
         setShowForm(false);
         setEditing(null);
       }
+      router.refresh();
+    } catch {
+      toast.error("Gagal menghubungi server.");
+    }
+  }
+
+  async function handleBestSeller(svc: ServiceData) {
+    const fd = new FormData();
+    fd.set("bestSeller", svc.bestSeller ? "false" : "true");
+    try {
+      const res = await fetch(`/api/admin/services/${svc.id}`, {
+        method: "PATCH",
+        body: fd,
+      });
+      const parsed = ApiResponse.safeParse(await res.json().catch(() => null));
+      if (!res.ok || !parsed.success || !parsed.data.ok) {
+        toast.error(
+          (parsed.success ? parsed.data.error : undefined) ??
+            "Gagal memperbarui best seller."
+        );
+        return;
+      }
+      toast.success(
+        svc.bestSeller
+          ? `"${svc.name}" dihapus dari best seller.`
+          : `"${svc.name}" ditandai best seller.`
+      );
       router.refresh();
     } catch {
       toast.error("Gagal menghubungi server.");
@@ -176,6 +217,47 @@ export function ServicesManager({ services }: { services: ServiceData[] }) {
                   max={1000}
                   defaultValue={editing?.sortOrder ?? 0}
                 />
+              </div>
+              <div className="space-y-2 rounded-lg border border-border p-3">
+                <div className="flex items-center gap-2">
+                  <input
+                    id="svc-lock"
+                    name="lockEnabled"
+                    type="checkbox"
+                    defaultChecked={editing?.lockedCapacity != null}
+                    className="size-4 rounded border-input"
+                  />
+                  <Label htmlFor="svc-lock">Kunci kapasitas</Label>
+                </div>
+                <div className="flex items-stretch gap-2">
+                  <Input
+                    id="svc-locked-capacity"
+                    name="lockedCapacity"
+                    type="number"
+                    min={1}
+                    max={10_000_000}
+                    placeholder="100"
+                    defaultValue={editing?.lockedCapacity ?? ""}
+                    className="w-40 tabular-nums"
+                  />
+                  <select
+                    id="svc-locked-unit"
+                    name="lockedCapacityUnit"
+                    defaultValue={editing?.lockedCapacityUnit ?? "Mbps"}
+                    aria-label="Satuan kapasitas kunci"
+                    className="h-11 rounded-lg border border-input bg-background px-3 text-sm"
+                  >
+                    {CAPACITY_UNITS.map((unit) => (
+                      <option key={unit} value={unit}>
+                        {unit}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Bila aktif, pengunjung tidak bisa mengubah kapasitas layanan ini
+                  di halaman publik.
+                </p>
               </div>
               <div className="flex items-center gap-2">
                 <input
@@ -332,6 +414,17 @@ export function ServicesManager({ services }: { services: ServiceData[] }) {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1.5">
+                        <Button
+                          size="sm"
+                          variant={svc.bestSeller ? "default" : "outline"}
+                          aria-pressed={svc.bestSeller}
+                          onClick={() => handleBestSeller(svc)}
+                        >
+                          <Star
+                            className={`size-3.5 ${svc.bestSeller ? "fill-current" : ""}`}
+                          />
+                          Best Seller
+                        </Button>
                         <Button
                           size="sm"
                           variant="outline"

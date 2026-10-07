@@ -4,6 +4,7 @@ import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { ImageValidationError, removeServiceImage, saveServiceImage } from "@/lib/service-image";
+import { CAPACITY_UNITS, type CapacityUnit } from "@/types";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -98,6 +99,42 @@ export async function PATCH(req: Request, { params }: Ctx) {
         );
       }
       data.active = activeRaw === "true";
+    }
+
+    if (form.has("bestSeller")) {
+      const bestSellerRaw = form.get("bestSeller");
+      if (bestSellerRaw !== "true" && bestSellerRaw !== "false") {
+        return NextResponse.json(
+          { error: "Status best seller tidak valid." },
+          { status: 400 }
+        );
+      }
+      data.bestSeller = bestSellerRaw === "true";
+    }
+
+    if (form.has("lockedCapacity")) {
+      const raw = str(form, "lockedCapacity").trim();
+      if (raw === "") {
+        data.lockedCapacity = null;
+        data.lockedCapacityUnit = null;
+      } else {
+        const lockValue = Number(raw);
+        if (!Number.isInteger(lockValue) || lockValue < 1 || lockValue > 10_000_000) {
+          return NextResponse.json(
+            { error: "Kapasitas kunci harus bilangan bulat 1-10.000.000." },
+            { status: 400 }
+          );
+        }
+        const unit = str(form, "lockedCapacityUnit").trim() || "Mbps";
+        if (!CAPACITY_UNITS.includes(unit as CapacityUnit)) {
+          return NextResponse.json(
+            { error: "Satuan kapasitas kunci tidak valid." },
+            { status: 400 }
+          );
+        }
+        data.lockedCapacity = lockValue;
+        data.lockedCapacityUnit = unit;
+      }
     }
 
     let imagePreviewUrl: string | null = null;

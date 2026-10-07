@@ -27,9 +27,9 @@
      #31b34a, digeser agar tidak bentrok dengan MCS). Lightness ditahan ≤0.54 supaya teks label
      yang memakai warna yang sama tetap kontras ≥4.5:1 di atas laut (--muted) dan daratan (--card). */
   --cable-2: oklch(0.51 0.13 125);
-  --cable-3: oklch(0.53 0.15 55);
+  --cable-3: oklch(77.942% 0.13725 184.662);
   --cable-4: oklch(0.54 0.17 345);
-  --cable-5: oklch(0.55 0.12 220);
+  --cable-5: oklch(62.926% 0.13874 66.313);
 }
 
 @theme inline {
@@ -76,7 +76,7 @@
 /* ── Solid primary button ── */
 .btn-brand {
   background-color: var(--primary);
-  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
 }
 .btn-brand:hover {
   background-color: oklch(0.35 0.07 255);
@@ -84,31 +84,79 @@
 }
 .btn-brand:active {
   background-color: oklch(0.32 0.07 255);
+  transform: translateY(0.5px) scale(0.99);
 }
 
-/* ── Service card: subtle border transition ── */
+/* ── Service card: hover lift + border ── */
 .card-lift {
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .card-lift:hover {
-  border-color: oklch(0.70 0.01 260);
+  border-color: oklch(0.7 0.01 260);
+  box-shadow: 0 8px 24px -14px oklch(0.15 0.02 260 / 0.2);
+  transform: translateY(-2px);
+}
+.card-lift:active {
+  transform: translateY(0);
 }
 .card-lift[data-selected="true"] {
   border-color: var(--primary);
-  box-shadow: 0 0 0 1px oklch(0.40 0.06 255 / 0.12);
+  box-shadow: 0 0 0 1px oklch(0.4 0.06 255 / 0.12), 0 4px 16px -10px oklch(0.4 0.06 255 / 0.25);
+}
+/* thumbnail zoom on hover — prefers transform (GPU) */
+.card-thumb img {
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), filter 0.3s ease;
+}
+.card-lift:hover .card-thumb img {
+  transform: scale(1.05);
+}
+.card-lift[data-selected="true"] .card-thumb img {
+  transform: scale(1.03);
 }
 
-/* ── Success fade-in (replaces bounce pop) ── */
+/* ── Keyframes ── */
 @keyframes eq-pop {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(4px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
-.animate-eq-pop {
-  animation: eq-pop 0.2s ease-out both;
+.animate-eq-pop { animation: eq-pop 0.3s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+@keyframes reveal-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes slide-fade {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes check-pop {
+  from { opacity: 0; transform: scale(0.6); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes shimmer-line {
+  from { transform: scaleX(0); opacity: 0; }
+  to { transform: scaleX(1); opacity: 1; }
+}
+.reveal-up { animation: reveal-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.reveal-delay-1 { animation-delay: 90ms; }
+.reveal-delay-2 { animation-delay: 180ms; }
+.reveal-delay-3 { animation-delay: 270ms; }
+.reveal-delay-4 { animation-delay: 360ms; }
+.animate-slide-fade { animation: slide-fade 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-check-pop { animation: check-pop 0.24s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+/* stagger direct children */
+.stagger > * { animation: reveal-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.stagger > *:nth-child(1) { animation-delay: 0ms; }
+.stagger > *:nth-child(2) { animation-delay: 70ms; }
+.stagger > *:nth-child(3) { animation-delay: 140ms; }
+.stagger > *:nth-child(4) { animation-delay: 210ms; }
+.stagger > *:nth-child(5) { animation-delay: 280ms; }
+.stagger > *:nth-child(6) { animation-delay: 350ms; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-up, .animate-eq-pop, .animate-slide-fade, .animate-check-pop, .stagger > * {
+    animation: none !important;
+  }
+  .card-lift, .card-thumb img, .btn-brand { transition: none !important; }
+  .card-lift:hover { transform: none !important; }
 }

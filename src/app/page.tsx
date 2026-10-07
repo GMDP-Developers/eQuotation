@@ -2,7 +2,7 @@ import { ArrowRight, Network } from "lucide-react";
 
 import { ServiceRequestForm } from "@/components/service-request-form";
 import { prisma } from "@/lib/db";
-import type { PublicAbout, PublicService } from "@/types";
+import { toCapacityUnit, type PublicAbout, type PublicService } from "@/types";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +20,9 @@ export default async function HomePage() {
     imageFull: s.imageFull,
     sortOrder: s.sortOrder,
     active: s.active,
+    bestSeller: s.bestSeller,
+    lockedCapacity: s.lockedCapacity,
+    lockedCapacityUnit: toCapacityUnit(s.lockedCapacityUnit),
   }));
 
   const setting = await prisma.siteSetting.findUnique({
@@ -47,18 +50,13 @@ export default async function HomePage() {
     <div className="flex min-h-screen flex-col bg-background">
       {/* ── Thin accent line at very top ── */}
       <div className="h-0.5 bg-primary" aria-hidden />
-
-      {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-border bg-card">
+      {/* Header — subtle backdrop blur */}
+      <header className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur-md supports-[backdrop-filter]:bg-card/70">
         <div className="mx-auto flex w-full items-center justify-between px-5 py-4 sm:px-8">
           <div className="flex items-center gap-2.5">
             {brandLogo ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={brandLogo}
-                alt=""
-                className="size-9 rounded-lg object-cover"
-              />
+              <img src={brandLogo} alt="" className="h-9 w-auto max-w-36 object-contain" />
             ) : (
               <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <Network className="size-4" />
@@ -86,13 +84,11 @@ export default async function HomePage() {
       {/* Hero */}
       <section className="relative mx-auto w-full bg-gradient-to-b from-primary/[0.04] to-background px-5 pt-6 pb-3 sm:px-8 sm:pt-8 sm:pb-4">
         <div className="relative">
-          <h1 className="mt-2 max-w-2xl text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+          <h1 className="reveal-up mt-2 max-w-2xl text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
             Permintaan Layanan Jaringan
           </h1>
-
-          <div className="mt-2 h-0.5 w-16 bg-primary" aria-hidden />
-
-          <p className="mt-2 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
+          <div className="reveal-up reveal-delay-1 mt-2 h-0.5 w-16 origin-left bg-primary" aria-hidden />
+          <p className="reveal-up reveal-delay-2 mt-2 max-w-xl text-[15px] leading-relaxed text-muted-foreground">
             Lengkapi informasi berikut untuk mendapatkan penawaran layanan
             sesuai kebutuhan kapasitas perusahaan Anda.
           </p>

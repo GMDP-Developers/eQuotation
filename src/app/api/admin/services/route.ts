@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { ImageValidationError, removeServiceImage, saveServiceImage } from "@/lib/service-image";
+import { CAPACITY_UNITS, type CapacityUnit } from "@/types";
 
 function str(form: FormData, key: string): string {
   const v = form.get(key);
@@ -70,6 +71,40 @@ export async function POST(req: Request) {
     );
   }
   const active = activeRaw !== "false";
+  const bestSellerRaw = form.get("bestSeller");
+  if (
+    bestSellerRaw !== null &&
+    bestSellerRaw !== "true" &&
+    bestSellerRaw !== "false"
+  ) {
+    return NextResponse.json(
+      { error: "Status best seller tidak valid." },
+      { status: 400 }
+    );
+  }
+  const bestSeller = bestSellerRaw === "true";
+
+  let lockedCapacity: number | null = null;
+  let lockedCapacityUnit: string | null = null;
+  const lockRaw = str(form, "lockedCapacity").trim();
+  if (lockRaw !== "") {
+    const lockValue = Number(lockRaw);
+    if (!Number.isInteger(lockValue) || lockValue < 1 || lockValue > 10_000_000) {
+      return NextResponse.json(
+        { error: "Kapasitas kunci harus bilangan bulat 1-10.000.000." },
+        { status: 400 }
+      );
+    }
+    const unit = str(form, "lockedCapacityUnit").trim() || "Mbps";
+    if (!CAPACITY_UNITS.includes(unit as CapacityUnit)) {
+      return NextResponse.json(
+        { error: "Satuan kapasitas kunci tidak valid." },
+        { status: 400 }
+      );
+    }
+    lockedCapacity = lockValue;
+    lockedCapacityUnit = unit;
+  }
 
   let imagePreviewUrl: string | null = null;
   let imageFullUrl: string | null = null;
@@ -119,6 +154,9 @@ export async function POST(req: Request) {
           imageFull: imageFullUrl,
           sortOrder,
           active,
+          bestSeller,
+          lockedCapacity,
+          lockedCapacityUnit,
         },
       });
       await tx.auditLog.create({

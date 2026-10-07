@@ -120,11 +120,7 @@ export function SiteSettingsForm({
             </p>
             {logo && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={logo}
-                alt="Preview logo"
-                className="size-24 rounded-md border object-cover"
-              />
+              <img src={logo} alt="Preview logo" className="h-24 w-auto max-w-48 object-contain rounded-md border bg-white" />
             )}
             <div className="flex items-center gap-2">
               <input

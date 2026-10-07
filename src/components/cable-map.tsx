@@ -1,15 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Minus, Plus, RotateCcw } from "lucide-react";
-
-// ASC route (lon, lat), Singapore → Anyer; source: submarinecablemap.com cable-geo.json, 2026-10-05.
+// ASC route (lon, lat), Singapore → Jakarta; source: submarinecablemap.com cable-geo.json, 2026-10-05.
 // Jalur Australia/Perth & spur Christmas Island dihapus atas permintaan.
 const ROUTE: [number, number][] = [
   [103.946, 1.327], [103.781, 1.019], [103.781, 0.794], [104.175, 0.513],
   [104.85, 0.401], [105.3, 0.119], [105.975, -0.781], [106.764, -2.131],
   [107.016, -3.03], [106.987, -4.601], [106.537, -5.162], [106.312, -5.498],
-  [105.75, -5.946], [105.8839, -6.0737],
+  [106.57, -5.85], [106.8279, -6.1716],
 ];
 
 // MCS route (lon, lat), Singapore ↔ Jakarta; source: submarinecablemap.com cable-geo.json, 2026-10-05
@@ -37,22 +34,23 @@ const R8: [number, number][][] = [
   [104.941, 0.723], [104.538, 0.869], [104.133, 1.174]],
 ];
 
-// OWN — kabel milik sendiri, Jakarta → Surabaya via Laut Jawa (pantai utara Jawa);
-// jalur laut internal, bukan rute publik submarinecablemap.com.
+// OWN — kabel milik sendiri, Jakarta → Surabaya via jalur darat (lintas Jawa);
+// rute internal, bukan rute publik submarinecablemap.com.
 const OWN: [number, number][] = [
-  [106.828, -6.172], [107.4, -6.05], [108.2, -6.05], [109.0, -6.35], [109.9, -6.55],
-  [110.7, -6.35], [111.5, -6.45], [112.2, -6.55], [112.7538, -7.2573],
+  [106.828, -6.172], [107.1, -6.7], [107.9, -7.0], [108.8, -7.2], [109.7, -7.35],
+  [110.6, -7.45], [111.4, -7.4], [112.2, -7.35], [112.7538, -7.2573],
 ];
 
-// Titik awal (Singapura), titik akhir kabel (Anyer, Jakarta, Tanjung Pakis), dan
+// Titik awal (Singapura), titik landing kabel (Jakarta, Tanjung Pakis), dan
 // landing kabel milik sendiri (Surabaya); titik perantara lain dihapus atas permintaan.
 // submarinecablemap.com landing-point-geo.json 2026-10-05 (OWN: jalur internal).
 // `dx/dy` = offset label (unit user, dx negatif → teks rata kanan); diatur agar tidak bertumpuk.
-// `tone` = warna kabel (dot + label), disamakan dengan warna jalurnya.
+// `tone` = warna kabel (dot + label), disamakan dengan warna jalurnya; `labelTone` meng-override warna label saja.
 const LANDINGS: {
   id: string;
   label: string;
   tone: string;
+  labelTone?: string;
   at: [number, number];
   dx: number;
   dy: number;
@@ -60,9 +58,8 @@ const LANDINGS: {
 }[] = [
   // ASC (Australia-Singapore Cable)
   { id: "tanah-merah-singapore", label: "SINGAPORE", tone: "fill-primary", at: [103.9466, 1.3273], dx: -7, dy: 3 },
-  { id: "anyer-indonesia", label: "ANYER", tone: "fill-primary", at: [105.8839, -6.0737], dx: -7, dy: -9 },
   // MCS (Matrix Cable System)
-  { id: "jakarta-indonesia", label: "JAKARTA", tone: "fill-cable-2", at: [106.8279, -6.1716], dx: 0, dy: 15, anchor: "middle" },
+  { id: "jakarta-indonesia", label: "JAKARTA", tone: "fill-cable-2", labelTone: "fill-primary", at: [106.8279, -6.1716], dx: -7, dy: 3 },
   // RISING 8
   { id: "tanjung-pakis-indonesia", label: "TANJUNG PAKIS", tone: "fill-cable-4", at: [107.1209, -5.9813], dx: 7, dy: 5 },
   // OWN (kabel milik sendiri)
@@ -87,11 +84,11 @@ const LAND: [number, number][][] = [
 
 // Equirectangular with cos(mid-lat) correction; OX/OY menaruh rute di tengah bingkai 520 lebar.
 const VIEW = 520;
-const LON0 = 103.0, LON1 = 113.7, LAT0 = -17.8, LAT1 = 1.55;
+const LON0 = 103.0, LON1 = 113.7, LAT0 = -18.9, LAT1 = 2.6;
 const KX = Math.cos((-8.125 * Math.PI) / 180); // ≈0.9899
-const K = (VIEW * 0.96) / (LAT1 - LAT0); // ≈25.80 px/deg latitude
-const W = (LON1 - LON0) * KX * K; // ≈273 px route width
-const OX = (VIEW - W) / 2; // ≈123
+const K = (VIEW * 0.96) / (LAT1 - LAT0); // ≈23.22 px/deg latitude
+const W = (LON1 - LON0) * KX * K; // ≈246 px route width
+const OX = (VIEW - W) / 2; // ≈137
 const OY = (VIEW - (LAT1 - LAT0) * K) / 2; // ≈10
 const px = ([lon, lat]: [number, number]) =>
   `${(OX + (lon - LON0) * KX * K).toFixed(1)},${(OY + (LAT1 - lat) * K).toFixed(1)}`;
@@ -109,110 +106,25 @@ const R8_D = R8.map((l) => "M" + l.map(px).join(" L")).join(" ");
 const OWN_D = "M" + OWN.map(px).join(" L");
 
 /**
- * Bingkai 16:8. Semua rute & titik landing muat di viewBox awal (Singapura–Jawa–Surabaya);
- * CONTENT menahan geser tetap di area peta.
+ * Bingkai 16:8, tampilan tetap tanpa zoom/geser; seluruh rute & titik landing
+ * muat dengan margin (Singapura–Jawa–Surabaya).
  */
-type View = { x: number; y: number; k: number };
-const FRAME_W = VIEW;
-const FRAME_H = (FRAME_W * 8) / 16;
-const CONTENT = { x: 0, y: 0, w: 540, h: 320 };
-const ZOOM_MIN = 1;
-const ZOOM_MAX = 8;
-const ZOOM_STEP = 1.6;
-const BTN =
-  "flex size-7 items-center justify-center rounded-md border border-border bg-card/90 text-foreground shadow-sm backdrop-blur transition hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 disabled:opacity-40";
+const FRAME_H = (VIEW * 8) / 16;
 
-/** Ukuran viewBox pada faktor zoom k. */
-const frameAt = (k: number) => ({ w: FRAME_W / k, h: FRAME_H / k });
-
-/** Tahan view di dalam CONTENT. */
-const clampView = (v: View): View => {
-  const { w, h } = frameAt(v.k);
-  return {
-    k: v.k,
-    x: Math.min(Math.max(v.x, CONTENT.x), CONTENT.x + CONTENT.w - w),
-    y: Math.min(Math.max(v.y, CONTENT.y), CONTENT.y + CONTENT.h - h),
-  };
-};
-
-/** Zoom ke faktor baru sambil menahan titik (cx, cy) tetap, lalu clamp. */
-const zoomView = (v: View, factor: number, cx: number, cy: number): View => {
-  const k = Math.min(Math.max(v.k * factor, ZOOM_MIN), ZOOM_MAX);
-  const a = frameAt(v.k);
-  const b = frameAt(k);
-  return clampView({
-    k,
-    x: cx - ((cx - v.x) / a.w) * b.w,
-    y: cy - ((cy - v.y) / a.h) * b.h,
-  });
-};
+/** ponytail: zoom interaktif dimatikan — bila perlu lagi, kembalikan state view + handler + tombol. */
+const z = 1;
 
 /** Angka viewBox/atribut tanpa desimal bila bulat. */
 const num = (v: number) => Number(v.toFixed(3));
 
 export function CableMap() {
-  const [view, setView] = useState<View>({ x: 0, y: 0, k: ZOOM_MIN });
-  const svgRef = useRef<SVGSVGElement>(null);
-  const dragging = useRef<{ px: number; py: number } | null>(null);
-  const z = view.k;
-  const frame = frameAt(view.k);
-  const zoomed = view.k > ZOOM_MIN;
-
-  // Wheel zoom: listener native non-passive → preventDefault boleh (halaman tidak ikut scroll).
-  useEffect(() => {
-    const el = svgRef.current;
-    if (!el) return;
-    const onWheel = (e: WheelEvent) => {
-      e.preventDefault();
-      const rect = el.getBoundingClientRect();
-      setView((v) => {
-        const a = frameAt(v.k);
-        const cx = v.x + ((e.clientX - rect.left) / rect.width) * a.w;
-        const cy = v.y + ((e.clientY - rect.top) / rect.height) * a.h;
-        return zoomView(v, Math.exp(-e.deltaY * 0.0015), cx, cy);
-      });
-    };
-    el.addEventListener("wheel", onWheel, { passive: false });
-    return () => el.removeEventListener("wheel", onWheel);
-  }, []);
-
-  const zoomFromCenter = (factor: number) =>
-    setView((v) => {
-      const a = frameAt(v.k);
-      return zoomView(v, factor, v.x + a.w / 2, v.y + a.h / 2);
-    });
-
-  // Geser (pan) — mouse; sentuhan dibiarkan ke scroll halaman. Batas geser = CONTENT.
-  const onPointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
-    if (e.pointerType !== "mouse" || e.button !== 0) return;
-    dragging.current = { px: e.clientX, py: e.clientY };
-    e.currentTarget.setPointerCapture(e.pointerId);
-  };
-  const onPointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
-    const d = dragging.current;
-    if (!d) return;
-    const scale = frame.w / e.currentTarget.getBoundingClientRect().width;
-    const dx = (e.clientX - d.px) * scale;
-    const dy = (e.clientY - d.py) * scale;
-    dragging.current = { px: e.clientX, py: e.clientY };
-    setView((v) => clampView({ ...v, x: v.x - dx, y: v.y - dy }));
-  };
-  const endDrag = () => {
-    dragging.current = null;
-  };
-
   return (
     <div className="relative w-full overflow-hidden rounded-lg border border-border bg-card shadow-sm">
       <div className="relative aspect-[16/8] bg-muted">
         <svg
-          ref={svgRef}
-          className={`absolute h-full w-full ${zoomed ? "cursor-grab active:cursor-grabbing" : ""}`}
-          viewBox={`${num(view.x)} ${num(view.y)} ${num(frame.w)} ${num(frame.h)}`}
+          className="absolute h-full w-full"
+          viewBox={`0 0 ${num(VIEW)} ${num(FRAME_H)}`}
           fill="none"
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={endDrag}
-          onPointerLeave={endDrag}
         >
           {/* Graticule */}
           <g className="stroke-border" strokeOpacity={0.7} strokeWidth={num(0.75 / z)}>
@@ -315,7 +227,7 @@ export function CableMap() {
             strokeLinejoin="round"
           />
 
-          {/* Rute OWN: halo + garis (putus-putus panjang, kabel milik sendiri → Surabaya via Laut Jawa) */}
+          {/* Rute OWN: halo + garis (putus-putus panjang, kabel milik sendiri → Surabaya via jalur darat) */}
           <path
             d={OWN_D}
             className="stroke-cable-5/25"
@@ -346,7 +258,7 @@ export function CableMap() {
                 strokeWidth={num(2 / z)}
               />
               <text
-                className={l.tone}
+                className={l.labelTone ?? l.tone}
                 fontSize={num(9 / z)}
                 fontWeight={700}
                 letterSpacing={num(0.25 / z)}
@@ -359,37 +271,8 @@ export function CableMap() {
             </g>
           ))}
         </svg>
-        <div className="absolute top-2 right-2 flex flex-col gap-1">
-          <button
-            type="button"
-            className={BTN}
-            aria-label="Perbesar peta"
-            title="Perbesar"
-            onClick={() => zoomFromCenter(ZOOM_STEP)}
-            disabled={view.k >= ZOOM_MAX}
-          >
-            <Plus className="size-4" strokeWidth={2.5} />
-          </button>
-          <button
-            type="button"
-            className={BTN}
-            aria-label="Perkecil peta"
-            title="Perkecil"
-            onClick={() => zoomFromCenter(1 / ZOOM_STEP)}
-            disabled={!zoomed}
-          >
-            <Minus className="size-4" strokeWidth={2.5} />
-          </button>
-          <button
-            type="button"
-            className={BTN}
-            aria-label="Reset zoom peta"
-            title="Reset"
-            onClick={() => setView({ x: 0, y: 0, k: ZOOM_MIN })}
-            disabled={!zoomed}
-          >
-            <RotateCcw className="size-4" strokeWidth={2.5} />
-          </button>
+        <div className="absolute bottom-2 left-2 rounded-md bg-primary px-2 py-1 text-[11px] font-medium text-primary-foreground shadow-sm">
+          latency average 12ms
         </div>
       </div>
       <ul className="flex flex-col gap-1.5 border-t border-border px-4 py-3 text-[12px] text-muted-foreground">
@@ -399,35 +282,31 @@ export function CableMap() {
             tint: "bg-primary/10 text-primary",
             swatch: "border-primary",
             name: "Australia-Singapore Cable",
-            text: "Tanah Merah → Anyer",
           },
           {
             code: "MCS",
             tint: "bg-cable-2/10 text-cable-2",
             swatch: "border-cable-2",
             name: "Matrix Cable System",
-            text: "Jakarta → Changi South",
           },
           {
             code: "B2JS",
             tint: "bg-cable-3/10 text-cable-3",
             swatch: "border-cable-3 border-dashed",
             name: "Jakarta-Bangka-Singapore (B2JS)",
-            text: "Jakarta → Bangka → Tanah Merah",
           },
           {
             code: "R8",
             tint: "bg-cable-4/10 text-cable-4",
             swatch: "border-cable-4 border-dotted",
             name: "RISING 8",
-            text: "Tanjung Bemban → Tanjung Pakis → Changi North",
           },
           {
-            code: "OWN",
+            code: "FS",
             tint: "bg-cable-5/10 text-cable-5",
             swatch: "border-cable-5 border-dashed",
-            name: "OWN (kabel milik sendiri)",
-            text: "Jakarta → Surabaya (via Laut Jawa)",
+            name: "FiberStar",
+            text: "(via darat)",
           },
         ].map((c) => (
           <li key={c.code} className="flex items-center gap-2">

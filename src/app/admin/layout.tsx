@@ -28,11 +28,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
         <div className="flex items-center gap-2.5 border-b px-5 py-5">
           {brandLogo ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={brandLogo}
-              alt=""
-              className="size-9 rounded-lg object-cover"
-            />
+            <img src={brandLogo} alt="" className="h-9 w-auto max-w-32 object-contain" />
           ) : (
             <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
               <Inbox className="size-4" />

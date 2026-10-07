@@ -50,6 +50,9 @@ model Service {
   imageFull    String? // gambar full — tampil di panel kanan (publik); fallback ke preview bila kosong
   sortOrder    Int      @default(0)
   active       Boolean  @default(true)
+  bestSeller   Boolean  @default(false) // via tombol di dashboard admin
+  lockedCapacity     Int? // kapasitas dipatok admin; null = pengunjung bebas mengisi
+  lockedCapacityUnit String? // 'Mbps' | 'Gbps'; dipakai bila lockedCapacity terisi
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }

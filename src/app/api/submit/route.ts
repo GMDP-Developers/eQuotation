@@ -50,6 +50,11 @@ export async function POST(req: Request) {
     );
   }
 
+  // Kapasitas terkunci milik layanan selalu menang, apa pun yang dikirim klien.
+  const capacity = svc.lockedCapacity ?? data.capacity;
+  const capacityUnit =
+    svc.lockedCapacity != null ? (svc.lockedCapacityUnit ?? "Mbps") : data.capacityUnit;
+
   try {
     const created = await prisma.serviceRequest.create({
       data: {
@@ -59,8 +64,8 @@ export async function POST(req: Request) {
         phone: data.phone,
         email: data.email,
         serviceType: data.serviceType,
-        capacity: data.capacity,
-        capacityUnit: data.capacityUnit,
+        capacity,
+        capacityUnit,
         notes: data.notes || null,
       },
     });
