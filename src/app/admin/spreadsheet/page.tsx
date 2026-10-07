@@ -32,10 +32,6 @@ export default async function SpreadsheetPage() {
     <div className="space-y-4">
       <div>
         <h2 className="text-lg font-semibold">Spreadsheet Permintaan</h2>
-        <p className="text-sm text-muted-foreground">
-          Semua permintaan dalam bentuk sheet. Sel terkunci — pakai “Unduh CSV”
-          untuk membuka di Excel.
-        </p>
       </div>
       {/* ponytail: tanpa pagination; aman untuk ratusan–ribuan baris. Upgrade: server-side pagination bila data > ~10k. */}
       <RequestsSheet requests={requests} />

@@ -1,9 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Dev mode memblokir aset/endpoints dev lintas-origin (default: localhost saja);
-  // izinkan origin LAN supaya halaman dari IP lain ter-hydrate (klik/login hidup)
-  allowedDevOrigins: ["10.202.10.15", "10.10.10.254"],
+  // Kosong = zero-config. Auth.js pakai trustHost:true (auth.config.ts) jadi
+  // otomatis ikut Host publik via NAT Proxmox — tidak perlu set NEXTAUTH_URL.
+  // Dev LAN: bila `next dev` diblokir dari IP lain, set ALLOWED_DEV_ORIGINS="10.x.x.x,IP_PUBLIK"
+  ...(process.env.ALLOWED_DEV_ORIGINS
+    ? { allowedDevOrigins: process.env.ALLOWED_DEV_ORIGINS.split(",").map((s) => s.trim()).filter(Boolean) }
+    : {}),
 };
 
 export default nextConfig;

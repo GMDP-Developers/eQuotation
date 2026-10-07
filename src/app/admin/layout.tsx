@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Inbox, Layers, Settings, ShieldCheck, Table2 } from "lucide-react";
+import { Inbox, Layers, Settings, ShieldCheck, Table2, UserCog } from "lucide-react";
 
 import { BrandLogo } from "@/components/brand-logo";
 import { SignOutButton } from "@/components/sign-out-button";
@@ -32,13 +32,11 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
           </BrandLogo>
           <div>
             <p className="text-sm font-bold leading-tight">{brandName}</p>
-            <p className="text-[11px] text-muted-foreground">
-              {brandSubtitle}
-            </p>
+            <p className="text-[11px] text-muted-foreground">{brandSubtitle}</p>
           </div>
         </div>
 
-        <nav className="p-3">
+        <nav className="flex flex-col gap-1 p-3">
           <Link
             href="/admin/dashboard"
             className="flex items-center gap-2.5 rounded-lg bg-primary/12 px-3 py-2 text-sm font-medium text-primary shadow-xs"
@@ -46,7 +44,6 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
             <Inbox className="size-4" />
             Dashboard
           </Link>
-
           <Link
             href="/admin/spreadsheet"
             className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
@@ -68,6 +65,13 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
             <Settings className="size-4" />
             Pengaturan
           </Link>
+          <Link
+            href="/admin/account"
+            className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <UserCog className="size-4" />
+            Akun
+          </Link>
         </nav>
         <div className="mt-auto space-y-3 border-t p-4">
           <div className="flex items-center gap-2.5 rounded-lg bg-muted/60 p-2.5">
@@ -76,9 +80,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
             </span>
             <div className="min-w-0">
               <p className="truncate text-sm font-medium">{name}</p>
-              <p className="truncate text-[11px] text-muted-foreground">
-                Administrator
-              </p>
+              <p className="truncate text-[11px] text-muted-foreground">Administrator</p>
             </div>
           </div>
           <SignOutButton />
@@ -90,9 +92,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
         <header className="sticky top-0 z-10 flex items-center justify-between border-b bg-card/85 px-4 py-3 backdrop-blur md:px-6">
           <div>
             <h1 className="text-sm font-semibold">{brandName} Admin</h1>
-            <p className="text-xs text-muted-foreground">
-              Kelola permintaan layanan yang masuk
-            </p>
+            <p className="text-xs text-muted-foreground">Kelola permintaan layanan yang masuk</p>
           </div>
           <SignOutButton />
         </header>

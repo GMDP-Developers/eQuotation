@@ -29,16 +29,10 @@ export async function GET(req: Request) {
   const toRaw = searchParams.get("to");
 
   if (serviceType && serviceType.length > 60) {
-    return NextResponse.json(
-      { error: "Filter layanan tidak valid." },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Filter layanan tidak valid." }, { status: 400 });
   }
   if (status && !SERVICE_STATUS.includes(status as (typeof SERVICE_STATUS)[number])) {
-    return NextResponse.json(
-      { error: "Filter status tidak valid." },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Filter status tidak valid." }, { status: 400 });
   }
 
   const from = fromRaw ? toDate(fromRaw) : null;
@@ -70,40 +64,68 @@ export async function GET(req: Request) {
     });
 
     const data = rows.map((r) => ({
-      ID: r.id,
+      Dibuat: r.createdAt.toLocaleString("id-ID", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
       Perusahaan: r.companyName,
       Kontak: r.contactName,
       Jabatan: r.position ?? "",
       Telepon: r.phone,
       Email: r.email,
       Layanan: r.serviceType,
-      Kapasitas: r.capacity,
-      Satuan: r.capacityUnit,
+      Kapasitas: `${r.capacity} ${r.capacityUnit}`,
       Status: r.status,
       Catatan: r.notes ?? "",
-      Dibuat: r.createdAt.toISOString().slice(0, 19).replace("T", " "),
     }));
 
-    const ws = XLSX.utils.json_to_sheet(data);
+    const ws = XLSX.utils.json_to_sheet(data, {
+      header: ["Dibuat", "Perusahaan", "Kontak", "Jabatan", "Telepon", "Email", "Layanan", "Kapasitas", "Status", "Catatan"],
+    });
+
+    // Excel-like: lebar kolom, autoFilter, freeze header
+    ws["!cols"] = [
+      { wch: 18 },
+      { wch: 24 },
+      { wch: 18 },
+      { wch: 16 },
+      { wch: 16 },
+      { wch: 26 },
+      { wch: 14 },
+      { wch: 14 },
+      { wch: 12 },
+      { wch: 32 },
+    ];
+    const endCol = "J";
+    const endRow = data.length + 1;
+    ws["!autofilter"] = { ref: `A1:${endCol}1` };
+    // freeze header (SheetJS: !freeze or pane)
+    (ws as unknown as Record<string, unknown>)["!freeze"] = {
+      xSplit: 0,
+      ySplit: 1,
+      topLeftCell: "A2",
+      activePane: "bottomLeft",
+      state: "frozen",
+    };
+
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Permintaan");
 
-    // ponytail: in-memory xlsx; kalau data ribuan → stream ke file/disk.
-    const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+    const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx", compression: true });
 
     const today = new Date().toISOString().slice(0, 10);
-    return new Response(new Uint8Array(buf), {
+    return new Response(new Uint8Array(buf as ArrayBuffer), {
       headers: {
-        "Content-Type":
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         "Content-Disposition": `attachment; filename="permintaan-${today}.xlsx"`,
+        "Cache-Control": "no-store",
       },
     });
   } catch (err) {
     console.error("Gagal mengekspor data permintaan:", err);
-    return NextResponse.json(
-      { error: "Gagal mengekspor data. Coba lagi." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Gagal mengekspor data. Coba lagi." }, { status: 500 });
   }
 }

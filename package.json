@@ -8,9 +8,11 @@
     "start": "next start",
     "lint": "eslint .",
     "postinstall": "prisma generate",
+    "setup": "node scripts/setup-env.mjs && prisma migrate deploy && prisma db seed",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
-    "db:seed": "tsx --env-file=.env prisma/seed.ts"
+    "db:seed": "tsx --env-file=.env prisma/seed.ts",
+    "admin:reset-password": "tsx --env-file=.env prisma/reset-password.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
