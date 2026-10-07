@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
-import { prisma } from "@/lib/db";
+import { getBrand } from "@/lib/brand";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,18 +15,27 @@ const geistMono = Geist_Mono({
 });
 
 export async function generateMetadata(): Promise<Metadata> {
-  const setting = await prisma.siteSetting.findUnique({
-    where: { id: "singleton" },
-  });
-  const brandName = setting?.brandName ?? "eQuotation";
-  return {
-    title: {
-      default: `${brandName} — Permintaan Layanan`,
-      template: `%s · ${brandName}`,
-    },
-    description:
-      "Formulir permintaan layanan jaringan interaktif: ULO, Tier One, Intermix, dan Supermix.",
-  };
+  try {
+    const setting = await getBrand();
+    const brandName = setting?.brandName ?? "eQuotation";
+    return {
+      title: {
+        default: `${brandName} — Permintaan Layanan`,
+        template: `%s · ${brandName}`,
+      },
+      description:
+        "Formulir permintaan layanan jaringan interaktif: ULO, Tier One, Intermix, dan Supermix.",
+    };
+  } catch {
+    return {
+      title: {
+        default: `eQuotation — Permintaan Layanan`,
+        template: `%s · eQuotation`,
+      },
+      description:
+        "Formulir permintaan layanan jaringan interaktif: ULO, Tier One, Intermix, dan Supermix.",
+    };
+  }
 }
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

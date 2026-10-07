@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { textareaClass } from "@/lib/form-classes";
 
 const ApiResponse = z.object({
   ok: z.boolean().optional(),
@@ -31,8 +32,6 @@ export type SiteSettingData = {
   brandLogo: string | null;
 };
 
-const textareaClass =
-  "flex min-h-20 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] md:text-sm";
 
 export function SiteSettingsForm({
   initial,

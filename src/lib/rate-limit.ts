@@ -1,5 +1,4 @@
-// Sliding-window rate limiter in-memory. ponytail: cukup untuk single instance
-// (SQLite juga single-file). Kalau multi-replika → pindah ke Redis/store persisten.
+// Sliding-window rate limiter.
 const buckets = new Map<string, number[]>();
 
 export function rateLimit(key: string, limit: number, windowMs: number): boolean {

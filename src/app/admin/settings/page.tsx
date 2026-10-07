@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 
-import { prisma } from "@/lib/db";
-import { auth } from "@/lib/auth";
 import { SiteSettingsForm } from "@/components/admin/site-settings-form";
+import { auth } from "@/lib/auth";
+import { getBrand } from "@/lib/brand";
 
 export const dynamic = "force-dynamic";
 
@@ -12,13 +12,12 @@ export const metadata = {
 
 export default async function SettingsPage() {
   const session = await auth();
-  if (!session) {
+  // guarded by AdminLayout (!session?.user); kept for direct-route safety
+  if (!session?.user) {
     redirect("/login");
   }
 
-  const setting = await prisma.siteSetting.findUnique({
-    where: { id: "singleton" },
-  });
+  const setting = await getBrand();
 
   return (
     <div className="mx-auto max-w-2xl">

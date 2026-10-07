@@ -36,6 +36,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { selectClass } from "@/lib/form-classes";
 
 const SERVICE_BADGE: Record<string, string> = {
   ULO: "bg-sky-500/12 text-sky-700 ring-sky-500/25",
@@ -58,8 +59,6 @@ const STATUS_LABEL: Record<string, string> = {
   DITOLAK: "Ditolak",
 };
 
-const selectClass =
-  "h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] md:text-sm";
 
 type FilterValue = "ALL" | string;
 

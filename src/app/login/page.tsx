@@ -1,12 +1,10 @@
 import { LoginPanel } from "@/components/login-panel";
-import { prisma } from "@/lib/db";
+import { getBrand } from "@/lib/brand";
 
 export const dynamic = "force-dynamic";
 
 export default async function LoginPage() {
-  const setting = await prisma.siteSetting.findUnique({
-    where: { id: "singleton" },
-  });
+  const setting = await getBrand();
 
   return (
     <LoginPanel

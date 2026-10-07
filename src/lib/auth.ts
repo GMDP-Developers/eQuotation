@@ -25,8 +25,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (!username || !password) return null;
 
-        // ponytail: anti brute-force per-IP (in-memory). Multi-replika →
-        // Redis + backoff per-username.
         const ip =
           (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() ||
           "unknown";

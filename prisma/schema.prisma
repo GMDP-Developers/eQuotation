@@ -23,12 +23,12 @@ model ServiceRequest {
   position     String?
   phone        String
   email        String
-  serviceType  String // 'ULO' | 'Tier One' | 'Intermix' | 'Supermix'
+  serviceType  String
   capacity     Int
-  capacityUnit String // 'Mbps' | 'Gbps'
+  capacityUnit String
   ipAddress    String?
   notes        String?
-  status       String   @default("BARU") // 'BARU' | 'DIPROSES' | 'SELESAI' | 'DITOLAK'
+  status       String   @default("BARU")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }

@@ -23,7 +23,6 @@ export type PublicAbout = {
 
 export const CAPACITY_UNITS = ["Mbps", "Gbps"] as const;
 
-/** Normalisasi satuan dari DB (string bebas) ke union yang dipakai form. */
 export function toCapacityUnit(value: string | null | undefined): CapacityUnit | null {
   return CAPACITY_UNITS.find((u) => u === value) ?? null;
 }
@@ -66,8 +65,6 @@ export const serviceRequestSchema = z.object({
 });
 
 export type ServiceRequestInput = z.input<typeof serviceRequestSchema>;
-export type ServiceRequestValues = z.output<typeof serviceRequestSchema>;
-
 export type ServiceRequestRecord = {
   id: string;
   companyName: string;

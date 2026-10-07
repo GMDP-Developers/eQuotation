@@ -4,30 +4,16 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Check,
-  CheckCircle2,
-  Loader2,
-  Lock,
-  RotateCcw,
-  Send,
-  Star,
-} from "lucide-react";
+import { Check, CheckCircle2, Loader2, Lock, RotateCcw, Send, Star } from "lucide-react";
 import { toast } from "sonner";
 
-import {
-  CAPACITY_UNITS,
-  serviceRequestSchema,
-  type PublicAbout,
-  type PublicService,
-  type ServiceRequestInput,
-  type CapacityUnit,
-} from "@/types";
+import { CAPACITY_UNITS, serviceRequestSchema, type PublicAbout, type PublicService, type ServiceRequestInput, type CapacityUnit } from "@/types";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CableMap } from "@/components/cable-map";
+import { cn } from "@/lib/utils";
 
 
 type Recap = {
@@ -37,6 +23,9 @@ type Recap = {
 };
 
 const inputClass = "h-11 rounded-lg border-input bg-background md:text-sm";
+const cardShell = "overflow-hidden rounded-lg border border-border bg-card shadow-sm";
+const FALLBACK_SERVICE_LABEL = "ULO \u00b7 Tier One \u00b7 Intermix \u00b7 Supermix";
+const easeSpring = "ease-[var(--ease-spring)]";
 
 /** Gambar layanan; fallback blok polos bila file belum ada. */
 function ServiceImage({
@@ -51,41 +40,20 @@ function ServiceImage({
   fit?: "cover" | "contain" | "natural";
 }) {
   const [failed, setFailed] = useState(false);
-  // PNG bisa transparan — beri latar putih otomatis agar tidak tembus warna container
   const isPng = /\.png($|\?)/i.test(src ?? "");
 
-  // Gambar layanan = diagram padat & sudah dioptimalkan saat upload; biarkan Next
-  // menyajikan file aslinya (tanpa resize/kompresi ulang) supaya tetap tajam.
   if (fit === "natural") {
-    // width/height sekadar placeholder rasio; h-auto pakai rasio asli gambar
     return src && !failed ? (
-      <Image
-        src={src}
-        alt={alt}
-        width={1600}
-        height={1200}
-        unoptimized
-        className={`h-auto w-full${isPng ? " bg-white" : ""}`}
-        onError={() => setFailed(true)}
-      />
+      <Image src={src} alt={alt} width={1600} height={1200} unoptimized className={`h-auto w-full${isPng ? " bg-white" : ""}`} onError={() => setFailed(true)} />
     ) : (
       <div className="flex aspect-[4/3] w-full items-center justify-center bg-muted/60" />
     );
   }
 
   return (
-    <div
-      className={["relative h-full w-full overflow-hidden", isPng ? "bg-white" : "", className].join(" ")}
-    >
+    <div className={cn("relative h-full w-full overflow-hidden", isPng && "bg-white", className)}>
       {src && !failed ? (
-        <Image
-          src={src}
-          alt={alt}
-          fill
-          unoptimized
-          className={fit === "contain" ? "object-contain" : "object-cover"}
-          onError={() => setFailed(true)}
-        />
+        <Image src={src} alt={alt} fill unoptimized className={fit === "contain" ? "object-contain" : "object-cover"} onError={() => setFailed(true)} />
       ) : (
         <div className="flex size-full items-center justify-center bg-muted/60" />
       )}
@@ -93,7 +61,6 @@ function ServiceImage({
   );
 }
 
-/** Panel kanan default (konten dari setting about) — tampil di atas info layanan terpilih. */
 function InfoAside({
   services,
   about,
@@ -102,17 +69,11 @@ function InfoAside({
   about: PublicAbout;
 }) {
   const preview = services[0];
-
+  const serviceNamesLabel = services.map((s) => s.name).join(" \u00b7 ") || FALLBACK_SERVICE_LABEL;
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
-      {/* Preview gambar layanan pertama (bukan ikon) */}
-      {/* Gambar — 80% lebar panel, sisa 10% kiri-kanan */}
+    <div className={cardShell}>
       <div className="mx-[10%] w-[80%]">
-        <ServiceImage
-          src={about.image ?? preview?.imagePreview ?? null}
-          alt={about.title}
-          fit="natural"
-        />
+        <ServiceImage src={about.image ?? preview?.imagePreview ?? null} alt={about.title} fit="natural" />
       </div>
       <div className="flex flex-col gap-2 p-5">
         <h3 className="text-lg font-semibold tracking-tight text-foreground">
@@ -122,12 +83,7 @@ function InfoAside({
           {about.description}
         </p>
         <ul className="mt-2 flex flex-col gap-1.5 text-[13px] text-foreground/80">
-          {[
-            services.length
-              ? services.map((s) => s.name).join(" · ")
-              : "ULO · Tier One · Intermix · Supermix",
-            ...about.bullets,
-          ].map((item) => (
+          {[serviceNamesLabel, ...about.bullets].map((item) => (
             <li key={item} className="flex items-start gap-2">
               <Check
                 className="mt-0.5 size-3.5 shrink-0 text-primary"
@@ -142,10 +98,9 @@ function InfoAside({
   );
 }
 
-/** Kartu info layanan terpilih — tampil di bawah panel default saat ada pilihan. */
 function SelectedServiceInfo({ service }: { service: PublicService }) {
   return (
-    <div className="mt-6 overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+    <div className={cn(cardShell, "mt-6")}>
       <div className="relative mx-[10%] aspect-[16/10] w-[80%] bg-muted/50">
         <ServiceImage
           src={service.imageFull ?? service.imagePreview}
@@ -255,7 +210,6 @@ export function ServiceRequestForm({
   const capacityUnit = watch("capacityUnit");
   const selectedService = services.find((s) => s.name === serviceType);
 
-  // Layanan dengan kapasitas terkunci: nilai dipatok admin, pengunjung tidak bisa mengubah.
   const lockedCapacity = selectedService?.lockedCapacity ?? null;
   const lockedUnit = selectedService?.lockedCapacityUnit ?? "Mbps";
 
@@ -314,7 +268,7 @@ export function ServiceRequestForm({
   if (success) {
     return (
       <div className="mx-auto max-w-lg">
-        <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+        <div className={cardShell}>
           <div aria-hidden className="h-1 w-full bg-primary" />
           <div className="px-8 py-14 text-center">
             <span className="animate-eq-pop mx-auto flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -366,7 +320,6 @@ export function ServiceRequestForm({
       className="flex flex-col gap-8"
       noValidate
     >
-      {/* Honeypot anti-bot; diisi bot → zod 422 "Bot terdeteksi" */}
       <div
         aria-hidden
         className="absolute left-0 top-0 h-0 w-0 overflow-hidden opacity-0 pointer-events-none"
@@ -381,7 +334,6 @@ export function ServiceRequestForm({
         />
       </div>
 
-      {/* Data Perusahaan */}
       <section className="reveal-up flex flex-col gap-4">
         <SectionTitle required>Data Perusahaan</SectionTitle>
         <div className="grid gap-x-5 gap-y-4 sm:grid-cols-2">
@@ -426,7 +378,6 @@ export function ServiceRequestForm({
         </div>
       </section>
 
-      {/* Layanan */}
       <section className="reveal-up reveal-delay-1 flex flex-col gap-4">
         <SectionTitle required>Pilih Layanan</SectionTitle>
         <div className="stagger grid grid-cols-2 gap-3" role="radiogroup" aria-label="Pilihan layanan">
@@ -444,11 +395,11 @@ export function ServiceRequestForm({
                     shouldValidate: true,
                   })
                 }
-                className={[
+                className={cn(
                   "card-lift group flex flex-col overflow-hidden rounded-lg border bg-card text-left",
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
-                  selected ? "border-primary" : "border-border hover:border-foreground/20",
-                ].join(" ")}
+                  selected ? "border-primary" : "border-border hover:border-foreground/20"
+                )}
               >
                 <div className="relative h-36 w-full overflow-hidden bg-muted/50 sm:h-40">
                   <div className="card-thumb absolute inset-0 [&_img]:blur-[3px] [&_img]:scale-105">
@@ -486,7 +437,6 @@ export function ServiceRequestForm({
         <FieldError message={errors.serviceType?.message} />
       </section>
 
-      {/* Kapasitas & Catatan */}
       <section className="reveal-up reveal-delay-2 flex flex-col gap-5">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:gap-8">
           <div className="flex flex-col gap-2.5">
@@ -507,11 +457,7 @@ export function ServiceRequestForm({
                 placeholder="100"
                 readOnly={lockedCapacity != null}
                 aria-readonly={lockedCapacity != null}
-                className={`${inputClass} w-full rounded-r-none text-center tabular-nums sm:w-40${
-                  lockedCapacity != null
-                    ? " cursor-not-allowed bg-muted/50 text-muted-foreground"
-                    : ""
-                }`}
+                className={cn(inputClass, "w-full rounded-r-none text-center tabular-nums sm:w-40", lockedCapacity != null && "cursor-not-allowed bg-muted/50 text-muted-foreground")}
                 {...register("capacity")}
               />
               <div
@@ -533,15 +479,11 @@ export function ServiceRequestForm({
                           shouldValidate: true,
                         })
                       }
-                      className={[
+                      className={cn(
                         "h-full rounded-md px-3.5 text-[13px] font-medium transition-colors",
-                        active
-                          ? "btn-brand text-white"
-                          : "text-muted-foreground hover:text-foreground",
-                        lockedCapacity != null && !active
-                          ? "cursor-not-allowed opacity-60"
-                          : "",
-                      ].join(" ")}
+                        active ? "btn-brand text-white" : "text-muted-foreground hover:text-foreground",
+                        lockedCapacity != null && !active && "cursor-not-allowed opacity-60"
+                      )}
                     >
                       {unit}
                     </button>
@@ -564,7 +506,7 @@ export function ServiceRequestForm({
               id="notes"
               rows={3}
               placeholder="Kebutuhan spesifik, lokasi instalasi, target waktu…"
-              className="w-full resize-y rounded-lg border border-input bg-background px-3 py-2.5 text-[14px] transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/40 focus-visible:ring-[3px] md:text-sm"
+              className="w-full resize-y rounded-lg border border-input bg-background px-3 py-2.5 text-[14px] transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] md:text-sm"
               {...register("notes")}
             />
             <FieldError message={errors.notes?.message} />
@@ -572,7 +514,6 @@ export function ServiceRequestForm({
         </div>
       </section>
 
-      {/* Submit */}
       <div className="reveal-up reveal-delay-3 flex flex-col gap-3 border-t border-border pt-7">
         <Button
           type="submit"
@@ -596,44 +537,46 @@ export function ServiceRequestForm({
   );
 
 
+  const hasSelection = !!serviceType;
 
   return (
     <div className="grid gap-6 lg:grid-cols-2 lg:items-start lg:gap-8">
-      {/* ── Kiri: Form (50%) ── */}
-      <div className="reveal-up reveal-delay-3 order-1 min-w-0 overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+      <div className={cn(cardShell, "reveal-up reveal-delay-3 order-1 min-w-0")}>
         <div className="h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" aria-hidden />
         <div className="p-5 sm:p-7">{form}</div>
       </div>
-      {/* ── Kanan: CableMap + InfoAside — peta bergeser naik ke header & menghilang saat layanan dipilih ── */}
       <aside className="reveal-up reveal-delay-4 order-2 lg:sticky lg:top-24">
+        {/* CableMap: collapses via grid-rows + blur/scale/translate — same spring easing */}
         <div
-          className={`grid transition-[grid-template-rows] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-            serviceType ? "grid-rows-[0fr]" : "grid-rows-[1fr]"
-          }`}
+          className={cn(
+            `grid transition-[grid-template-rows] duration-700 ${easeSpring}`,
+            hasSelection ? "grid-rows-[0fr]" : "grid-rows-[1fr]"
+          )}
         >
           <div className="min-h-0 overflow-hidden">
             <div
-              className={`pb-6 transition-[transform,opacity,filter] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform ${
-                serviceType
-                  ? "-translate-y-8 scale-[0.97] opacity-0 blur-[2px]"
-                  : "translate-y-0 scale-100 opacity-100 blur-0"
-              }`}
+              className={cn(
+                `pb-6 transition-[transform,opacity,filter] duration-700 ${easeSpring} will-change-transform`,
+                hasSelection ? "-translate-y-8 scale-[0.97] opacity-0 blur-[2px]" : "translate-y-0 scale-100 opacity-100 blur-0"
+              )}
             >
               <CableMap />
             </div>
           </div>
         </div>
         <div
-          className={`transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform ${
-            serviceType ? "-translate-y-1" : "translate-y-0"
-          }`}
+          className={cn(
+            `transition-transform duration-700 ${easeSpring} will-change-transform`,
+            hasSelection ? "-translate-y-1" : "translate-y-0"
+          )}
         >
           <InfoAside services={services} about={about} />
         </div>
         <div
-          className={`grid transition-[grid-template-rows,opacity] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+          className={cn(
+            `grid transition-[grid-template-rows,opacity] duration-500 ${easeSpring}`,
             selectedService ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
-          }`}
+          )}
         >
           <div className="min-h-0 overflow-hidden">
             {selectedService ? (

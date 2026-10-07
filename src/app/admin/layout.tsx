@@ -2,9 +2,10 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Inbox, Layers, Settings, ShieldCheck, Table2 } from "lucide-react";
 
+import { BrandLogo } from "@/components/brand-logo";
 import { SignOutButton } from "@/components/sign-out-button";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/db";
+import { getBrand } from "@/lib/brand";
 
 export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
   const session = await auth();
@@ -12,9 +13,7 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
     redirect("/login");
   }
 
-  const setting = await prisma.siteSetting.findUnique({
-    where: { id: "singleton" },
-  });
+  const setting = await getBrand();
   const brandName = setting?.brandName ?? "eQuotation";
   const brandSubtitle = setting?.brandSubtitle ?? "Service Request";
   const brandLogo = setting?.brandLogo ?? null;
@@ -26,14 +25,11 @@ export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
       {/* Sidebar */}
       <aside className="hidden w-60 shrink-0 flex-col border-r bg-card md:flex">
         <div className="flex items-center gap-2.5 border-b px-5 py-5">
-          {brandLogo ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={brandLogo} alt="" className="h-9 w-auto max-w-32 object-contain" />
-          ) : (
+          <BrandLogo src={brandLogo} className="h-9 w-auto max-w-32 object-contain">
             <span className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
               <Inbox className="size-4" />
             </span>
-          )}
+          </BrandLogo>
           <div>
             <p className="text-sm font-bold leading-tight">{brandName}</p>
             <p className="text-[11px] text-muted-foreground">

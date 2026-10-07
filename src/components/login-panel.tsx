@@ -6,6 +6,7 @@ import { signIn } from "next-auth/react";
 import { ArrowRight, Check, Loader2, LockKeyhole, Network } from "lucide-react";
 import { toast } from "sonner";
 
+import { BrandLogo } from "@/components/brand-logo";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -88,18 +89,11 @@ export function LoginPanel({
         />
 
         <div className="flex items-center gap-3">
-          {brandLogo ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={brandLogo}
-              alt=""
-              className="h-11 w-auto max-w-40 object-contain"
-            />
-          ) : (
+          <BrandLogo src={brandLogo} className="h-11 w-auto max-w-40 object-contain">
             <span className="flex size-11 items-center justify-center rounded-xl bg-white/15 text-white shadow-lg ring-1 ring-white/25">
               <Network className="size-5" />
             </span>
-          )}
+          </BrandLogo>
           <div>
             <p className="text-lg font-bold text-white">{brandName}</p>
             <p className="text-sm text-white/75">{brandSubtitle}</p>
@@ -135,18 +129,11 @@ export function LoginPanel({
         <div className="w-full max-w-sm">
           {/* brand mobile */}
           <div className="mb-8 flex items-center justify-center gap-2.5 lg:hidden">
-            {brandLogo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={brandLogo}
-                alt=""
-                className="h-10 w-auto max-w-36 object-contain"
-              />
-            ) : (
+            <BrandLogo src={brandLogo} className="h-10 w-auto max-w-36 object-contain">
               <span className="text-brand-gradient flex size-10 items-center justify-center rounded-xl text-primary-foreground shadow-md">
                 <Network className="size-5" />
               </span>
-            )}
+            </BrandLogo>
             <div>
               <p className="text-sm font-semibold tracking-tight">
                 {brandName}

@@ -65,7 +65,9 @@ export function RequestsSheet({
   const containerRef = useRef<HTMLDivElement>(null);
   const sheetsRef = useRef<WorksheetInstance[] | null>(null);
   const requestsRef = useRef<ServiceRequestRecord[]>(requests);
-  requestsRef.current = requests;
+  useEffect(() => {
+    requestsRef.current = requests;
+  }, [requests]);
 
   useEffect(() => {
     const el = containerRef.current;

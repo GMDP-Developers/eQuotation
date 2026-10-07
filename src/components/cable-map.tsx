@@ -111,11 +111,36 @@ const OWN_D = "M" + OWN.map(px).join(" L");
  */
 const FRAME_H = (VIEW * 8) / 16;
 
-/** ponytail: zoom interaktif dimatikan — bila perlu lagi, kembalikan state view + handler + tombol. */
 const z = 1;
 
 /** Angka viewBox/atribut tanpa desimal bila bulat. */
 const num = (v: number) => Number(v.toFixed(3));
+
+function CablePath({ d, className, dash }: { d: string; className: string; dash?: string }) {
+  const haloClass = className === "stroke-primary" ? `${className}/20` : `${className}/25`;
+  return (
+    <>
+      <path
+        d={d}
+        className={haloClass}
+        fill="none"
+        strokeWidth={num(5 / z)}
+        strokeDasharray={dash}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d={d}
+        className={className}
+        fill="none"
+        strokeWidth={num(1.8 / z)}
+        strokeDasharray={dash}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </>
+  );
+}
 
 export function CableMap() {
   return (
@@ -151,101 +176,11 @@ export function CableMap() {
             ))}
           </g>
 
-          {/* Rute: halo + garis. Ketebalan & dash dibagi z → ukuran layar tetap saat zoom. */}
-          <path
-            d={ROUTE_D}
-            className="stroke-primary/20"
-            fill="none"
-            strokeWidth={num(5 / z)}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d={ROUTE_D}
-            className="stroke-primary"
-            fill="none"
-            strokeWidth={num(1.8 / z)}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-
-          {/* Rute MCS: halo + garis */}
-          <path
-            d={MCS_D}
-            className="stroke-cable-2/25"
-            fill="none"
-            strokeWidth={num(5 / z)}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d={MCS_D}
-            className="stroke-cable-2"
-            fill="none"
-            strokeWidth={num(1.8 / z)}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-
-          {/* Rute B2JS: halo + garis (putus-putus agar rute yang bertumpuk tetap terbaca) */}
-          <path
-            d={B2JS_D}
-            className="stroke-cable-3/25"
-            fill="none"
-            strokeWidth={num(5 / z)}
-            strokeDasharray={`${num(6 / z)} ${num(4 / z)}`}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d={B2JS_D}
-            className="stroke-cable-3"
-            fill="none"
-            strokeWidth={num(1.8 / z)}
-            strokeDasharray={`${num(6 / z)} ${num(4 / z)}`}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-
-          {/* Rute RISING 8: halo + garis (titik-titik, rute keempat di koridor yang sama) */}
-          <path
-            d={R8_D}
-            className="stroke-cable-4/25"
-            fill="none"
-            strokeWidth={num(5 / z)}
-            strokeDasharray={`${num(1.5 / z)} ${num(3.5 / z)}`}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d={R8_D}
-            className="stroke-cable-4"
-            fill="none"
-            strokeWidth={num(1.8 / z)}
-            strokeDasharray={`${num(1.5 / z)} ${num(3.5 / z)}`}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-
-          {/* Rute OWN: halo + garis (putus-putus panjang, kabel milik sendiri → Surabaya via jalur darat) */}
-          <path
-            d={OWN_D}
-            className="stroke-cable-5/25"
-            fill="none"
-            strokeWidth={num(5 / z)}
-            strokeDasharray={`${num(10 / z)} ${num(5 / z)}`}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          <path
-            d={OWN_D}
-            className="stroke-cable-5"
-            fill="none"
-            strokeWidth={num(1.8 / z)}
-            strokeDasharray={`${num(10 / z)} ${num(5 / z)}`}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
+          <CablePath d={ROUTE_D} className="stroke-primary" />
+          <CablePath d={MCS_D} className="stroke-cable-2" />
+          <CablePath d={B2JS_D} className="stroke-cable-3" dash={`${num(6 / z)} ${num(4 / z)}`} />
+          <CablePath d={R8_D} className="stroke-cable-4" dash={`${num(1.5 / z)} ${num(3.5 / z)}`} />
+          <CablePath d={OWN_D} className="stroke-cable-5" dash={`${num(10 / z)} ${num(5 / z)}`} />
 
           {/* Landing station: dot + label semua kabel (offset diatur, ukuran tetap saat zoom) */}
           {P.map((l) => (

@@ -1,8 +1,9 @@
 import { ArrowRight, Network } from "lucide-react";
 
+import { BrandLogo } from "@/components/brand-logo";
 import { ServiceRequestForm } from "@/components/service-request-form";
 import { prisma } from "@/lib/db";
-import { toCapacityUnit, type PublicAbout, type PublicService } from "@/types";
+import { getBrand, toPublicAbout, toPublicService } from "@/lib/brand";
 
 export const dynamic = "force-dynamic";
 
@@ -11,40 +12,14 @@ export default async function HomePage() {
     where: { active: true },
     orderBy: { sortOrder: "asc" },
   });
-  const services: PublicService[] = rows.map((s) => ({
-    id: s.id,
-    name: s.name,
-    subtitle: s.subtitle,
-    description: s.description,
-    imagePreview: s.imagePreview,
-    imageFull: s.imageFull,
-    sortOrder: s.sortOrder,
-    active: s.active,
-    bestSeller: s.bestSeller,
-    lockedCapacity: s.lockedCapacity,
-    lockedCapacityUnit: toCapacityUnit(s.lockedCapacityUnit),
-  }));
+  const services = rows.map(toPublicService);
 
-  const setting = await prisma.siteSetting.findUnique({
-    where: { id: "singleton" },
-  });
+  const setting = await getBrand();
 
   const brandName = setting?.brandName ?? "eQuotation";
   const brandSubtitle = setting?.brandSubtitle ?? "Service Request";
   const brandLogo = setting?.brandLogo ?? null;
-  const about: PublicAbout = {
-    title: setting?.aboutTitle ?? "Tentang eQuotation",
-    description:
-      setting?.aboutDescription ??
-      "Sistem permintaan layanan jaringan korporat. Lengkapi formulir dan tim kami akan menghubungi Anda untuk penawaran.",
-    image: setting?.aboutImage ?? null,
-    bullets: setting
-      ? setting.aboutBullets
-          .split("\n")
-          .map((b) => b.trim())
-          .filter(Boolean)
-      : ["Penawaran sesuai kebutuhan kapasitas", "Respons cepat via WhatsApp"],
-  };
+  const about = toPublicAbout(setting);
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -54,14 +29,11 @@ export default async function HomePage() {
       <header className="sticky top-0 z-40 border-b border-border bg-card/80 backdrop-blur-md supports-[backdrop-filter]:bg-card/70">
         <div className="mx-auto flex w-full items-center justify-between px-5 py-4 sm:px-8">
           <div className="flex items-center gap-2.5">
-            {brandLogo ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={brandLogo} alt="" className="h-9 w-auto max-w-36 object-contain" />
-            ) : (
+            <BrandLogo src={brandLogo} className="h-9 w-auto max-w-36 object-contain">
               <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <Network className="size-4" />
               </span>
-            )}
+            </BrandLogo>
             <div>
               <p className="text-sm font-semibold tracking-tight text-foreground">
                 {brandName}
