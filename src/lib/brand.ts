@@ -32,18 +32,12 @@ export function toServiceData(s: Service) {
   };
 }
 
-export function toPublicAbout(setting: SiteSetting | null): PublicAbout {
+export function toPublicAbout(setting: SiteSetting | null): PublicAbout | null {
+  if (!setting || setting.aboutEnabled === false) return null;
   return {
-    title: setting?.aboutTitle ?? "Tentang eQuotation",
-    description:
-      setting?.aboutDescription ??
-      "Sistem permintaan layanan jaringan korporat. Lengkapi formulir dan tim kami akan menghubungi Anda untuk penawaran.",
-    image: setting?.aboutImage ?? null,
-    bullets: setting
-      ? setting.aboutBullets
-          .split("\n")
-          .map((b) => b.trim())
-          .filter(Boolean)
-      : ["Penawaran sesuai kebutuhan kapasitas", "Respons cepat via WhatsApp"],
+    title: setting.aboutTitle,
+    description: setting.aboutDescription,
+    image: setting.aboutImage,
+    bullets: setting.aboutBullets.split("\n").filter(Boolean),
   };
 }

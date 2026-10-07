@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Check, CheckCircle2, Loader2, Lock, RotateCcw, Send, Star } from "lucide-react";
+import { Check, CheckCircle2, Loader2, Lock, RotateCcw, Send } from "lucide-react";
 import { toast } from "sonner";
 
 import { CAPACITY_UNITS, serviceRequestSchema, type PublicAbout, type PublicService, type ServiceRequestInput, type CapacityUnit } from "@/types";
@@ -21,12 +21,22 @@ type Recap = {
   capacity: number;
   unit: string;
 };
-
 const inputClass = "h-11 rounded-lg border-input bg-background md:text-sm";
 const cardShell = "overflow-hidden rounded-lg border border-border bg-card shadow-sm";
 const FALLBACK_SERVICE_LABEL = "ULO \u00b7 Tier One \u00b7 Intermix \u00b7 Supermix";
 const easeSpring = "ease-[var(--ease-spring)]";
 
+// ponytail: 8 flat muted desaturated; tambah entri bila layanan > 8 (modulo). Upgrade: ganti ke token brand bila palet final.
+const SERVICE_CHIP_PALETTE = [
+  { idle: "border-[#e8e0d6] bg-[#fdfcfa] text-[#6b5f55] hover:border-[#d6c8b8] hover:bg-[#faf6f1]", sel: "border-[#8c7d6b] bg-[#8c7d6b] text-white shadow-sm" },
+  { idle: "border-[#dde3dc] bg-[#f8faf8] text-[#5a665e] hover:border-[#c8d1c6] hover:bg-[#f0f4f0]", sel: "border-[#7a8a7e] bg-[#7a8a7e] text-white shadow-sm" },
+  { idle: "border-[#dee3e8] bg-[#f8f9fa] text-[#5a6570] hover:border-[#c9d1d9] hover:bg-[#f0f2f4]", sel: "border-[#6b7a89] bg-[#6b7a89] text-white shadow-sm" },
+  { idle: "border-[#ecdcd5] bg-[#fdf9f7] text-[#7a5f55] hover:border-[#dec8bc] hover:bg-[#faf0ec]", sel: "border-[#9a7b6e] bg-[#9a7b6e] text-white shadow-sm" },
+  { idle: "border-[#e6e2dd] bg-[#fcfbfa] text-[#6b6560] hover:border-[#d6d0c8] hover:bg-[#f7f5f3]", sel: "border-[#8a837c] bg-[#8a837c] text-white shadow-sm" },
+  { idle: "border-[#e6dde2] bg-[#fcf8fb] text-[#6e5e68] hover:border-[#d6c8d1] hover:bg-[#f7f0f4]", sel: "border-[#8a7581] bg-[#8a7581] text-white shadow-sm" },
+  { idle: "border-[#e0e3d6] bg-[#f9faf7] text-[#62665a] hover:border-[#cdd1c2] hover:bg-[#f0f2ec]", sel: "border-[#7d8471] bg-[#7d8471] text-white shadow-sm" },
+  { idle: "border-[#e2e2e2] bg-[#fafafa] text-[#5a5a5a] hover:border-[#d1d1d1] hover:bg-[#f0f0f0]", sel: "border-[#4a4a4a] bg-[#4a4a4a] text-white shadow-sm" },
+] as const;
 /** Gambar layanan; fallback blok polos bila file belum ada. */
 function ServiceImage({
   src,
@@ -177,7 +187,7 @@ export function ServiceRequestForm({
   about,
 }: {
   services: PublicService[];
-  about: PublicAbout;
+  about: PublicAbout | null;
 }) {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -380,9 +390,10 @@ export function ServiceRequestForm({
 
       <section className="reveal-up reveal-delay-1 flex flex-col gap-4">
         <SectionTitle required>Pilih Layanan</SectionTitle>
-        <div className="stagger grid grid-cols-2 gap-3" role="radiogroup" aria-label="Pilihan layanan">
-          {services.map((svc) => {
+        <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Pilihan layanan">
+          {services.map((svc, idx) => {
             const selected = serviceType === svc.name;
+            const pal = SERVICE_CHIP_PALETTE[idx % SERVICE_CHIP_PALETTE.length];
             return (
               <button
                 key={svc.id}
@@ -396,40 +407,16 @@ export function ServiceRequestForm({
                   })
                 }
                 className={cn(
-                  "card-lift group flex flex-col overflow-hidden rounded-lg border bg-card text-left",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50",
-                  selected ? "border-primary" : "border-border hover:border-foreground/20"
+                  "relative flex min-h-[42px] items-center justify-center rounded-xl border px-3 py-2.5 text-center text-[13px] font-medium leading-tight shadow-sm transition-all duration-200 hover:-translate-y-px hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/10",
+                  selected ? pal.sel : pal.idle
                 )}
               >
-                <div className="relative h-36 w-full overflow-hidden bg-muted/50 sm:h-40">
-                  <div className="card-thumb absolute inset-0 [&_img]:blur-[3px] [&_img]:scale-105">
-                    <ServiceImage src={svc.imagePreview} alt={svc.name} />
-                  </div>
-                  <div aria-hidden className="absolute inset-0 bg-black/30" />
-                  <p
-                    aria-hidden
-                    className="absolute inset-0 flex items-center justify-center p-3 text-center text-[17px] font-bold leading-tight tracking-wide text-white drop-shadow-[0_1px_6px_rgba(0,0,0,0.7)]"
-                  >
-                    {svc.name}
-                  </p>
-                  {svc.bestSeller ? (
-                    <span className="absolute top-2 left-2 z-10 inline-flex items-center gap-1 rounded-full bg-amber-400/95 px-2 py-0.5 text-[10px] font-bold tracking-wide text-amber-950 shadow-sm">
-                      <Star className="size-3 fill-current" />
-                      Best Seller
-                    </span>
-                  ) : null}
-                  {selected ? (
-                    <span className="animate-check-pop absolute top-2 right-2 z-10 flex size-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
-                      <Check className="size-3" strokeWidth={3} />
-                    </span>
-                  ) : null}
-                </div>
-                <div className="flex flex-col gap-1 px-3 py-2.5">
-                  <span className="sr-only">{svc.name}</span>
-                  <p className="line-clamp-2 text-center text-[11px] leading-snug text-muted-foreground">
-                    {svc.subtitle}
-                  </p>
-                </div>
+                <span className="line-clamp-2">{svc.name}</span>
+                {selected ? (
+                  <span className="absolute right-1.5 top-1.5 flex size-4 items-center justify-center rounded-full bg-white/25">
+                    <Check className="size-3" strokeWidth={3} />
+                  </span>
+                ) : null}
               </button>
             );
           })}
@@ -546,7 +533,7 @@ export function ServiceRequestForm({
         <div className="p-5 sm:p-7">{form}</div>
       </div>
       <aside className="reveal-up reveal-delay-4 order-2 lg:sticky lg:top-24">
-        {/* CableMap: collapses via grid-rows + blur/scale/translate — same spring easing */}
+        {/* InfoAside - collapse/hilang saat hasSelection */}
         <div
           className={cn(
             `grid transition-[grid-template-rows] duration-700 ${easeSpring}`,
@@ -560,18 +547,11 @@ export function ServiceRequestForm({
                 hasSelection ? "-translate-y-8 scale-[0.97] opacity-0 blur-[2px]" : "translate-y-0 scale-100 opacity-100 blur-0"
               )}
             >
-              <CableMap />
+              {about && <InfoAside services={services} about={about} />}
             </div>
           </div>
         </div>
-        <div
-          className={cn(
-            `transition-transform duration-700 ${easeSpring} will-change-transform`,
-            hasSelection ? "-translate-y-1" : "translate-y-0"
-          )}
-        >
-          <InfoAside services={services} about={about} />
-        </div>
+
         <div
           className={cn(
             `grid transition-[grid-template-rows,opacity] duration-500 ${easeSpring}`,

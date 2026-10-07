@@ -29,6 +29,7 @@ export default async function SettingsPage() {
                 aboutDescription: setting.aboutDescription,
                 aboutImage: setting.aboutImage,
                 aboutBullets: setting.aboutBullets,
+                aboutEnabled: true,
                 brandName: setting.brandName,
                 brandSubtitle: setting.brandSubtitle,
                 brandLogo: setting.brandLogo,

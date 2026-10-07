@@ -78,5 +78,6 @@ model SiteSetting {
   brandName        String   @default("eQuotation")
   brandSubtitle    String   @default("Service Request")
   brandLogo        String? // path gambar di public/images/services; kosong = ikon default
-  updatedAt        DateTime @updatedAt
+  aboutEnabled      Boolean  @default(true)
+  updatedAt         DateTime @updatedAt
 }

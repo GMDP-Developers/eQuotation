@@ -69,6 +69,7 @@ export async function PUT(req: Request) {
       { status: 400 }
     );
   }
+  const aboutEnabled = form.get("aboutEnabled") === "on" || form.get("aboutEnabled") === "true";
 
   const aboutBullets = str(form, "aboutBullets");
   if (aboutBullets.length > 2000) {
@@ -154,6 +155,7 @@ export async function PUT(req: Request) {
       create: {
         id: SINGLETON,
         aboutTitle,
+        aboutEnabled,
         aboutDescription,
         aboutImage,
         aboutBullets,
@@ -162,6 +164,7 @@ export async function PUT(req: Request) {
         brandLogo,
       },
       update: {
+        aboutEnabled,
         aboutTitle,
         aboutDescription,
         aboutImage,
@@ -171,16 +174,9 @@ export async function PUT(req: Request) {
         brandLogo,
       },
     });
-    await prisma.auditLog.create({
-      data: {
-        action: "SITE_SETTINGS_UPDATE",
-        targetId: SINGLETON,
-        detail: aboutTitle,
-      },
-    });
     return NextResponse.json({ ok: true });
-  } catch (err) {
-    console.error(err);
+  } catch (e) {
+    console.error(e);
     return NextResponse.json(
       { error: "Gagal menyimpan pengaturan. Coba lagi." },
       { status: 500 }

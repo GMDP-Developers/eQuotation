@@ -27,6 +27,7 @@ export type SiteSettingData = {
   aboutDescription: string;
   aboutImage: string | null;
   aboutBullets: string;
+  aboutEnabled: boolean;
   brandName: string;
   brandSubtitle: string;
   brandLogo: string | null;
@@ -40,6 +41,7 @@ export function SiteSettingsForm({
 }) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
+  const [aboutEnabled, setAboutEnabled] = useState(initial?.aboutEnabled ?? true);
   const [image, setImage] = useState<string | null>(
     initial?.aboutImage ?? null
   );
@@ -141,12 +143,18 @@ export function SiteSettingsForm({
 
       <Card>
         <CardHeader>
-          <CardTitle>Halaman Publik</CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle>Halaman Publik</CardTitle>
+            <div className="flex items-center gap-2 text-sm font-normal">
+              <input type="checkbox" name="aboutEnabled" value="on" defaultChecked={aboutEnabled} onChange={(e) => setAboutEnabled(e.target.checked)} />
+              <Label className="cursor-pointer">Panel Tentang Aktif</Label>
+            </div>
+          </div>
           <CardDescription>
             Panel &quot;Tentang&quot; halaman publik.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className={aboutEnabled ? "" : "opacity-50"}>
           <div className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="about-title">Judul</Label>
@@ -213,13 +221,13 @@ export function SiteSettingsForm({
                 />
               )}
             </div>
-            <div className="flex gap-2">
-              <Button type="submit" disabled={submitting}>
-                {submitting ? "Menyimpan..." : "Simpan Pengaturan"}
-              </Button>
-            </div>
           </div>
         </CardContent>
+        <div className="p-6 pt-0">
+          <Button type="submit" disabled={submitting}>
+            {submitting ? "Menyimpan..." : "Simpan Pengaturan"}
+          </Button>
+        </div>
       </Card>
     </form>
   );
