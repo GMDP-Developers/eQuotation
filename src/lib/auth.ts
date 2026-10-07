@@ -7,6 +7,10 @@ import { authConfig } from "@/lib/auth.config";
 import { rateLimit } from "@/lib/rate-limit";
 import { headers } from "next/headers";
 
+// ponytail: cache session 30s — jwt dipanggil TIAP request (proxy + RSC). Tanpa cache tunnel Cloudflare burst → N query paralel → SQLite SQLITE_BUSY → ngadat. Naikkan ke 60s bila sesi jarang revoke; hapus bila pakai Redis.
+const sessionCache = new Map<string, { expiresAt: number; lastActive: number; cachedAt: number }>();
+const CACHE_MS = 30_000;
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   callbacks: {
@@ -18,12 +22,34 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if ("sid" in user && typeof user.sid === "string") token.sid = user.sid;
       }
       if (typeof token.sid === "string" && token.sid) {
+        const now = Date.now();
+        const cached = sessionCache.get(token.sid);
+        if (cached && now - cached.cachedAt < CACHE_MS) {
+          if (cached.expiresAt < now) {
+            sessionCache.delete(token.sid);
+            return null as unknown as typeof token;
+          }
+          if (cached.lastActive < now - 5 * 60 * 1000) {
+            const fresh = now;
+            sessionCache.set(token.sid, { ...cached, lastActive: fresh, cachedAt: fresh });
+            void prisma.session
+              .update({ where: { id: token.sid }, data: { lastActive: new Date(fresh) } })
+              .catch(() => {});
+          }
+          return token;
+        }
         const session = await prisma.session.findUnique({ where: { id: token.sid } }).catch(() => null);
-        if (!session || session.expiresAt < new Date()) {
+        if (!session || session.expiresAt.getTime() < now) {
+          sessionCache.delete(token.sid);
           if (session) await prisma.session.delete({ where: { id: token.sid } }).catch(() => {});
           return null as unknown as typeof token;
         }
-        if (session.lastActive.getTime() < Date.now() - 5 * 60 * 1000) {
+        sessionCache.set(token.sid, {
+          expiresAt: session.expiresAt.getTime(),
+          lastActive: session.lastActive.getTime(),
+          cachedAt: now,
+        });
+        if (session.lastActive.getTime() < now - 5 * 60 * 1000) {
           void prisma.session
             .update({ where: { id: token.sid }, data: { lastActive: new Date() } })
             .catch(() => {});
@@ -46,6 +72,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (msg.token && typeof msg.token === "object" && "sid" in msg.token) {
         const raw = msg.token.sid;
         if (typeof raw === "string" && raw) {
+          sessionCache.delete(raw);
           await prisma.session.delete({ where: { id: raw } }).catch(() => {});
         }
       }

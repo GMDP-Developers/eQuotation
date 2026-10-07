@@ -53,8 +53,9 @@ export default async function HomePage() {
         </div>
       </header>
 
-      {/* Hero
-      <section className="relative mx-auto w-full bg-gradient-to-b from-primary/[0.04] to-background px-5 pt-6 pb-3 sm:px-8 sm:pt-8 sm:pb-4">
+      {/* Hero */}
+      <section className="relative mx-auto w-full bg-gradient-to-b from-primary/[0.04] to-background px-5 pt-6 pb-3 sm:px-8 sm:pt-2 sm:pb-4">
+        {/*
         <div className="relative">
           <h1 className="reveal-up mt-2 max-w-2xl text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
             Permintaan Layanan Jaringan
@@ -64,8 +65,8 @@ export default async function HomePage() {
             Lengkapi informasi berikut untuk mendapatkan penawaran layanan
             sesuai kebutuhan kapasitas perusahaan Anda.
           </p>
-        </div>
-      </section>. */}
+        </div> */}
+      </section>
 
       {/* Form */}
       <main className="mx-auto w-full flex-1 px-5 pb-16 sm:px-8">

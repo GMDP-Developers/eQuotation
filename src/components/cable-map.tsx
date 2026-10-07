@@ -205,7 +205,7 @@ export function CableMap() {
             </g>
           ))}
         </svg>
-        <div className="absolute bottom-2 left-2 rounded-md bg-primary px-2 py-1 text-[11px] font-medium text-primary-foreground shadow-sm">
+        <div className="absolute bottom-2 left-2 rounded-md bg-primary px-2 py-1 text-[14px] font-medium text-primary-foreground shadow-sm">
           latency average 12ms
         </div>
       </div>

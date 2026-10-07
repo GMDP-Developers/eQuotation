@@ -375,7 +375,7 @@ export function ServiceRequestForm({
           <Field
             id="companyName"
             label="Nama Perusahaan"
-            placeholder="PT Contoh Jaya"
+            placeholder="PT Contoh Padma Jaya"
             error={errors.companyName?.message}
             required
             {...register("companyName")}
@@ -455,8 +455,8 @@ export function ServiceRequestForm({
       </section>
 
       <section className="reveal-up reveal-delay-2 flex flex-col gap-5">
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:gap-8">
-          <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:gap-6">
+          <div className="flex w-full flex-col gap-2.5 sm:w-[220px] sm:shrink-0">
             <SectionTitle required>Kapasitas</SectionTitle>
             {lockedCapacity != null ? (
               <span className="inline-flex w-fit items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
@@ -474,7 +474,7 @@ export function ServiceRequestForm({
                 placeholder="100"
                 readOnly={lockedCapacity != null}
                 aria-readonly={lockedCapacity != null}
-                className={cn(inputClass, "w-full rounded-r-none text-center tabular-nums sm:w-40", lockedCapacity != null && "cursor-not-allowed bg-muted/50 text-muted-foreground")}
+                className={cn(inputClass, "w-full rounded-r-none text-center tabular-nums sm:w-24", lockedCapacity != null && "cursor-not-allowed bg-muted/50 text-muted-foreground")}
                 {...register("capacity")}
               />
               <div
@@ -497,7 +497,7 @@ export function ServiceRequestForm({
                         })
                       }
                       className={cn(
-                        "h-full rounded-md px-3.5 text-[13px] font-medium transition-colors",
+                        "h-full rounded-md px-3 text-[13px] font-medium transition-colors",
                         active ? "btn-brand text-white" : "text-muted-foreground hover:text-foreground",
                         lockedCapacity != null && !active && "cursor-not-allowed opacity-60"
                       )}
@@ -517,7 +517,7 @@ export function ServiceRequestForm({
             <FieldError message={errors.capacityUnit?.message} />
           </div>
 
-          <div className="flex flex-1 flex-col gap-2.5">
+          <div className="flex min-w-0 flex-1 flex-col gap-2.5">
             <SectionTitle required>Catatan Tambahan</SectionTitle>
             <textarea
               id="notes"
@@ -563,7 +563,7 @@ export function ServiceRequestForm({
         <CableMap />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2 lg:items-start lg:gap-8">
+      <div className="grid gap-6 lg:grid-cols-[3fr_7fr] lg:items-start lg:gap-8">
         <div className={cn(cardShell, "reveal-up reveal-delay-3 order-1 min-w-0")}>
           <div className="h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" aria-hidden />
           <div className="p-5 sm:p-7">{form}</div>

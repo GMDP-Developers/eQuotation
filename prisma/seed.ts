@@ -1,4 +1,6 @@
 import { Prisma, PrismaClient } from "@prisma/client";
+import { existsSync } from "node:fs";
+import path from "node:path";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -20,8 +22,10 @@ async function main() {
     create: { username: "admin", password: hash, name: "Administrator", role: "ADMIN" },
   });
 
-  // Stable image source: public/topology-parts/*.png + brand/about stable copies
-  // public/images/services/<name>.png is the canonical path (copied from topology-parts at seed time).
+  // Canonical paths — must match files in public/images/services/*
+  // public/images/services/logo.png        → SiteSetting.brandLogo (header)
+  // public/images/services/<service>.png   → Service.imagePreview/imageFull (panel kanan)
+  // ULO Starter Pack has no dedicated image → null (placeholder)
   const services: Prisma.ServiceCreateInput[] = [
     {
       name: "SuperMIX",
@@ -158,13 +162,34 @@ async function main() {
       aboutTitle: "Tentang Layanan Kami",
       aboutDescription:
         "Sistem permintaan layanan jaringan korporat. Lengkapi formulir dan tim kami akan menghubungi Anda untuk penawaran.",
-      aboutImage: "/images/services/about-panel.png",
+      // null → InfoAside fallback ke preview layanan pertama (imagePreview yg sudah ada)
+      aboutImage: null,
       aboutBullets: "Penawaran sesuai kebutuhan kapasitas",
       brandName: "eQuotation",
       brandSubtitle: "PT. Datakom Padma Jaya",
-      brandLogo: "/images/services/brand-logo.png",
+      // public/images/services/logo.png — file memang ada (9.7KB)
+      brandLogo: "/images/services/logo.png",
     },
   });
+
+  // Heal path hantu — file tidak ada di public/ (seed lama: brand-logo.png / about-panel.png / uuid yang filenya hilang)
+  // Hanya timpa bila file memang hilang; upload admin yang filenya masih ada dibiarkan.
+  const setting = await prisma.siteSetting.findUnique({ where: { id: "singleton" } });
+  if (setting) {
+    const publicDir = path.join(process.cwd(), "public");
+    const missing = (stored: string | null) => {
+      if (!stored) return false;
+      const rel = stored.replace(/^\/+/, "");
+      return !existsSync(path.join(publicDir, rel));
+    };
+    const patch: Record<string, unknown> = {};
+    if (setting.aboutImage && missing(setting.aboutImage)) patch.aboutImage = null; // InfoAside fallback ke preview layanan pertama
+    if (setting.brandLogo && missing(setting.brandLogo)) patch.brandLogo = "/images/services/logo.png";
+    if (Object.keys(patch).length) {
+      await prisma.siteSetting.update({ where: { id: "singleton" }, data: patch });
+      console.log(`Healed SiteSetting: ${Object.keys(patch).join(", ")}`);
+    }
+  }
 
   console.log(`Seed done → login: admin / ${envPassword ? "SEED_ADMIN_PASSWORD" : "admin123"} (${services.length} services)`);
 }
