@@ -206,7 +206,7 @@ export function CableMap() {
           ))}
         </svg>
         <div className="absolute bottom-2 left-2 rounded-md bg-primary px-2 py-1 text-[14px] font-medium text-primary-foreground shadow-sm">
-          latency average 12ms
+          Average Latency: 12ms
         </div>
       </div>
       <ul className="flex items-center justify-between gap-x-4 gap-y-1.5 overflow-x-auto border-t border-border px-4 py-3 text-[12px] text-muted-foreground">
@@ -240,7 +240,7 @@ export function CableMap() {
             tint: "bg-cable-5/10 text-cable-5",
             swatch: "border-cable-5 border-dashed",
             name: "FiberStar",
-            text: "(via darat)",
+            text: "(Jalur Darat)",
           },
         ].map((c) => (
           <li key={c.code} className="flex shrink-0 items-center gap-2 whitespace-nowrap">

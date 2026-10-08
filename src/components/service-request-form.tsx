@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Check, CheckCircle2, Loader2, Lock, PackageSearch, RotateCcw, Send } from "lucide-react";
+import { Check, CheckCircle2, Loader2, Lock, PackageSearch, RotateCcw, Send, Star } from "lucide-react";
 import { toast } from "sonner";
 
 import { CAPACITY_UNITS, serviceRequestSchema, type PublicAbout, type PublicService, type ServiceRequestInput, type CapacityUnit } from "@/types";
@@ -442,6 +442,11 @@ export function ServiceRequestForm({
                 )}
               >
                 <span className="line-clamp-2">{svc.name}</span>
+                {svc.bestSeller && (
+                  <span className="absolute left-1.5 top-1.5 text-amber-500">
+                    <Star className="size-3.5" fill="currentColor" />
+                  </span>
+                )}
                 {selected ? (
                   <span className="absolute right-1.5 top-1.5 flex size-4 items-center justify-center rounded-full bg-white/25">
                     <Check className="size-3" strokeWidth={3} />
