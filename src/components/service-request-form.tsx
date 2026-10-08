@@ -133,7 +133,7 @@ function ServiceDetailPlaceholder() {
 function SelectedServiceInfo({ service }: { service: PublicService }) {
   return (
     <div className={cardShell}>
-      <div className="relative mx-[10%] aspect-[16/10] w-[80%] bg-muted/50">
+              <div className="relative aspect-[16/10] w-full bg-muted/50">
         <ServiceImage
           src={service.imageFull ?? service.imagePreview}
           alt={service.name}
@@ -144,13 +144,13 @@ function SelectedServiceInfo({ service }: { service: PublicService }) {
         <span className="w-fit rounded-md bg-primary/10 px-2.5 py-0.5 text-[11px] font-medium text-primary">
           Anda memilih
         </span>
-        <h3 className="text-lg font-semibold tracking-tight text-foreground">
+        <h3 className="text-[24px] font-semibold tracking-tight text-foreground">
           {service.name}
         </h3>
         <p className="text-[12px] font-medium text-muted-foreground">
           {service.subtitle}
         </p>
-        <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">
+        <p className="mt-1 text-[14px] leading-relaxed text-muted-foreground">
           {service.description}
         </p>
       </div>
@@ -563,7 +563,7 @@ export function ServiceRequestForm({
         <CableMap />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[3fr_7fr] lg:items-start lg:gap-8">
+      <div className="grid gap-6 lg:grid-cols-[4fr_6fr] lg:items-start lg:gap-8">
         <div className={cn(cardShell, "reveal-up reveal-delay-3 order-1 min-w-0")}>
           <div className="h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" aria-hidden />
           <div className="p-5 sm:p-7">{form}</div>
