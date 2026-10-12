@@ -8,13 +8,12 @@ import { Check, CheckCircle2, Loader2, Lock, PackageSearch, RotateCcw, Send, Sta
 import { toast } from "sonner";
 
 import { CAPACITY_UNITS, serviceRequestSchema, type PublicAbout, type PublicService, type ServiceRequestInput, type CapacityUnit, DATACENTERS, PICKUP_LABELS, PICKUP_METHODS, type PickupMethod } from "@/types";
-import { parseLocation } from "@/lib/geo";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CableMap } from "@/components/cable-map";
-import { CoordsMap } from "@/components/coords-map";
+import { LocationPickerMap } from "@/components/location-picker-map";
 import { cn } from "@/lib/utils";
 
 
@@ -252,7 +251,6 @@ export function ServiceRequestForm({
   const pickupMethod = watch("pickupMethod");
   const datacenter = watch("datacenter");
   const locationValue = watch("location");
-  const parsedLocation = locationValue ? parseLocation(locationValue) : null;
   const selectedService = services.find((s) => s.name === serviceType);
 
   const lockedCapacity = selectedService?.lockedCapacity ?? null;
@@ -559,12 +557,11 @@ export function ServiceRequestForm({
               Buka Google Maps → Share → Copy link, lalu tempel di sini.
             </p>
             <FieldError message={errors.location?.message} />
-            {parsedLocation ? (
-              <CoordsMap
-                coords={parsedLocation.coords}
-                className="h-48 w-full rounded-lg border bg-white"
-              />
-            ) : null}
+            <LocationPickerMap
+              value={locationValue ?? ""}
+              onChange={(v) => setValue("location", v, { shouldValidate: true })}
+              className="h-52 w-full rounded-lg border bg-white"
+            />
           </div>
         ) : null}
       </section>
