@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/db";
 import { serviceRequestSchema } from "@/types";
+import { parseLocation } from "@/lib/geo";
 import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
@@ -56,6 +57,7 @@ export async function POST(req: Request) {
     svc.lockedCapacity != null ? (svc.lockedCapacityUnit ?? "Mbps") : data.capacityUnit;
 
   try {
+    const loc = data.location ? parseLocation(data.location) : null;
     const created = await prisma.serviceRequest.create({
       data: {
         companyName: data.companyName,
@@ -67,6 +69,13 @@ export async function POST(req: Request) {
         capacity,
         capacityUnit,
         notes: data.notes || null,
+        pickupMethod: data.pickupMethod,
+        datacenter: data.datacenter ?? null,
+        datacenterOther: data.datacenterOther || null,
+        location: data.location || null,
+        mapsUrl: loc?.mapsUrl ?? null,
+        latitude: loc?.coords.latitude ?? null,
+        longitude: loc?.coords.longitude ?? null,
       },
     });
     return NextResponse.json(

@@ -3,7 +3,7 @@ import * as XLSX from "xlsx";
 
 import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
-import { SERVICE_STATUS } from "@/types";
+import { SERVICE_STATUS, PICKUP_LABELS } from "@/types";
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -78,12 +78,28 @@ export async function GET(req: Request) {
       Email: r.email,
       Layanan: r.serviceType,
       Kapasitas: `${r.capacity} ${r.capacityUnit}`,
+      Pengambilan:
+        PICKUP_LABELS[r.pickupMethod as keyof typeof PICKUP_LABELS] ?? r.pickupMethod,
+      DataCenter: r.datacenter
+        ? r.datacenter === "Lainnya"
+          ? `Lainnya — ${r.datacenterOther ?? ""}`
+          : r.datacenter
+        : "",
+      Koordinat:
+        r.latitude != null && r.longitude != null
+          ? `${r.latitude}, ${r.longitude}`
+          : "",
+      Link:
+        r.mapsUrl ??
+        (r.latitude != null && r.longitude != null
+          ? `https://www.google.com/maps?q=${r.latitude},${r.longitude}`
+          : ""),
       Status: r.status,
       Catatan: r.notes ?? "",
     }));
 
     const ws = XLSX.utils.json_to_sheet(data, {
-      header: ["Dibuat", "Perusahaan", "Kontak", "Jabatan", "Telepon", "Email", "Layanan", "Kapasitas", "Status", "Catatan"],
+      header: ["Dibuat", "Perusahaan", "Kontak", "Jabatan", "Telepon", "Email", "Layanan", "Kapasitas", "Pengambilan", "Data Center", "Koordinat", "Link", "Status", "Catatan"],
     });
 
     // Excel-like: lebar kolom, autoFilter, freeze header
@@ -96,10 +112,14 @@ export async function GET(req: Request) {
       { wch: 26 },
       { wch: 14 },
       { wch: 14 },
+      { wch: 20 },
+      { wch: 16 },
+      { wch: 22 },
+      { wch: 40 },
       { wch: 12 },
       { wch: 32 },
     ];
-    const endCol = "J";
+    const endCol = "N";
     const endRow = data.length + 1;
     ws["!autofilter"] = { ref: `A1:${endCol}1` };
     // freeze header (SheetJS: !freeze or pane)

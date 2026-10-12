@@ -16,8 +16,9 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import { SERVICE_STATUS } from "@/types";
+import { SERVICE_STATUS, PICKUP_LABELS } from "@/types";
 import type { ServiceRequestRecord } from "@/types";
+import { CoordsMap } from "@/components/coords-map";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -494,6 +495,51 @@ export function RequestsDashboard({
                                 {STATUS_LABEL[r.status] ?? r.status}
                               </p>
                             </div>
+                            <div>
+                              <p className="text-muted-foreground">
+                                Pengambilan Koneksi
+                              </p>
+                              <p className="font-medium">
+                                {PICKUP_LABELS[r.pickupMethod as keyof typeof PICKUP_LABELS] ?? r.pickupMethod}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-muted-foreground">
+                                Tempat Datacenter
+                              </p>
+                              <p className="font-medium">
+                                {r.datacenter
+                                  ? r.datacenter === "Lainnya"
+                                    ? r.datacenterOther || "Lainnya"
+                                    : r.datacenter
+                                  : "—"}
+                              </p>
+                            </div>
+                            {r.latitude != null && r.longitude != null ? (
+                              <div className="sm:col-span-2 lg:col-span-4">
+                                <p className="text-muted-foreground">
+                                  Titik Koordinat
+                                </p>
+                                <p className="font-medium">
+                                  {r.latitude}, {r.longitude}{" "}
+                                  <a
+                                    className="text-primary underline underline-offset-2"
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    href={
+                                      r.mapsUrl ??
+                                      `https://www.google.com/maps?q=${r.latitude},${r.longitude}`
+                                    }
+                                  >
+                                    Buka di Google Maps
+                                  </a>
+                                </p>
+                                <CoordsMap
+                                  coords={{ latitude: r.latitude, longitude: r.longitude }}
+                                  className="mt-2 h-48 w-full max-w-xl rounded-lg border bg-white"
+                                />
+                              </div>
+                            ) : null}
                             <div className="sm:col-span-2 lg:col-span-4">
                               <p className="text-muted-foreground">Catatan</p>
                               <p className="whitespace-pre-wrap font-medium">

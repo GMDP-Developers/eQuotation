@@ -40,6 +40,13 @@ model ServiceRequest {
   capacityUnit String
   ipAddress    String?
   notes        String?
+  pickupMethod    String  // 'DATA_CENTER' | 'DELIVERY'
+  datacenter      String? // 'IDC' | 'Cyber APJII' | 'Omadata' | 'Lainnya'
+  datacenterOther String?
+  location        String? // input mentah user
+  latitude        Float?
+  longitude       Float?
+  mapsUrl         String?
   status       String   @default("BARU")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

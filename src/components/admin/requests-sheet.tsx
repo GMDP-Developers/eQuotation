@@ -23,6 +23,7 @@ type ColKey =
   | "email"
   | "serviceType"
   | "capacity"
+  | "pickup"
   | "notes"
   | "status";
 
@@ -35,6 +36,7 @@ const COLS: { key: ColKey; label: string; w: string }[] = [
   { key: "email", label: "EMAIL", w: "min-w-[190px]" },
   { key: "serviceType", label: "LAYANAN", w: "min-w-[110px]" },
   { key: "capacity", label: "KAPASITAS", w: "min-w-[110px]" },
+  { key: "pickup", label: "PENGAMBILAN", w: "min-w-[170px]" },
   { key: "status", label: "STATUS", w: "min-w-[100px]" },
   { key: "notes", label: "CATATAN", w: "min-w-[220px]" },
 ];
@@ -46,9 +48,21 @@ function formatDate(iso: string): string {
   return `${tgl} ${jam}`;
 }
 
+function pickupValue(r: ServiceRequestRecord): string {
+  if (r.pickupMethod === "DATA_CENTER") {
+    if (!r.datacenter) return "";
+    return r.datacenter === "Lainnya"
+      ? `Lainnya — ${r.datacenterOther ?? ""}`.trim()
+      : r.datacenter;
+  }
+  if (r.latitude != null && r.longitude != null) return `${r.latitude}, ${r.longitude}`;
+  return "";
+}
+
 function getSortValue(r: ServiceRequestRecord, k: ColKey): string {
   if (k === "capacity") return String(r.capacity).padStart(9, "0");
   if (k === "createdAt") return r.createdAt;
+  if (k === "pickup") return pickupValue(r).toLowerCase();
   const v = (r as unknown as Record<string, string | null>)[k];
   return (v ?? "").toString().toLowerCase();
 }
@@ -63,7 +77,7 @@ export function RequestsSheet({ requests }: { requests: ServiceRequestRecord[] }
     const s = q.trim().toLowerCase();
     if (!s) return requests;
     return requests.filter((r) =>
-      [r.companyName, r.contactName, r.email, r.phone, r.serviceType, r.position ?? "", r.notes ?? ""]
+      [r.companyName, r.contactName, r.email, r.phone, r.serviceType, r.position ?? "", r.notes ?? "", pickupValue(r)]
         .join(" ")
         .toLowerCase()
         .includes(s)
@@ -220,6 +234,9 @@ export function RequestsSheet({ requests }: { requests: ServiceRequestRecord[] }
                   <td className="whitespace-nowrap border-b border-r border-[#e5e7eb] px-2 py-1.5 text-[#111827]">{r.serviceType}</td>
                   <td className="whitespace-nowrap border-b border-r border-[#e5e7eb] px-2 py-1.5 tabular-nums text-[#111827]">
                     {r.capacity} {r.capacityUnit}
+                  </td>
+                  <td className="max-w-[170px] truncate border-b border-r border-[#e5e7eb] px-2 py-1.5 whitespace-nowrap text-[#111827]">
+                    {pickupValue(r) || "—"}
                   </td>
                   <td className="whitespace-nowrap border-b border-r border-[#e5e7eb] px-2 py-1.5">
                     <span className="inline-flex items-center gap-1.5 text-[12px]">

@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { parseLocation } from "@/lib/geo";
+
 export type PublicService = {
   id: string;
   name: string;
@@ -35,6 +37,16 @@ export const SERVICE_STATUS = [
   "DITOLAK",
 ] as const;
 export type ServiceStatus = (typeof SERVICE_STATUS)[number];
+
+export const PICKUP_METHODS = ["DATA_CENTER", "DELIVERY"] as const;
+export type PickupMethod = (typeof PICKUP_METHODS)[number];
+export const PICKUP_LABELS: Record<PickupMethod, string> = {
+  DATA_CENTER: "Koneksi ke Data Center",
+  DELIVERY: "Di antar via metro ke titik koordinat",
+};
+export const DATACENTERS = ["IDC", "Cyber APJII", "Omadata", "Lainnya"] as const;
+export type Datacenter = (typeof DATACENTERS)[number];
+
 export const serviceRequestSchema = z.object({
   companyName: z
     .string()
@@ -68,8 +80,28 @@ export const serviceRequestSchema = z.object({
     .trim()
     .min(1, "Catatan wajib diisi")
     .max(1000, "Maksimal 1000 karakter"),
+  pickupMethod: z.enum(PICKUP_METHODS, "Pilih pengambilan koneksi"),
+  datacenter: z.enum(DATACENTERS).optional(),
+  datacenterOther: z.string().trim().max(120, "Maksimal 120 karakter").optional(),
+  location: z.string().trim().max(500, "Maksimal 500 karakter").optional(),
   // Honeypot anti-bot: harus kosong. Isian non-kosong = bot.
   website: z.string().max(0, "Bot terdeteksi").optional(),
+}).superRefine((v, ctx) => {
+  if (v.pickupMethod === "DATA_CENTER") {
+    if (!v.datacenter) {
+      ctx.addIssue({ code: "custom", path: ["datacenter"], message: "Pilih tempat datacenter" });
+    }
+    if (v.datacenter === "Lainnya" && !v.datacenterOther) {
+      ctx.addIssue({ code: "custom", path: ["datacenterOther"], message: "Sebutkan datacenter lainnya" });
+    }
+  }
+  if (v.pickupMethod === "DELIVERY") {
+    if (!v.location) {
+      ctx.addIssue({ code: "custom", path: ["location"], message: "Tempel link Google Maps atau isi koordinat" });
+    } else if (!parseLocation(v.location)) {
+      ctx.addIssue({ code: "custom", path: ["location"], message: "Link tidak terbaca. Pakai link lengkap atau isi koordinat manual (lat,lng)." });
+    }
+  }
 });
 
 export type ServiceRequestInput = z.input<typeof serviceRequestSchema>;
@@ -85,6 +117,13 @@ export type ServiceRequestRecord = {
   capacityUnit: string;
   status: string;
   notes: string | null;
+  pickupMethod: string;
+  datacenter: string | null;
+  datacenterOther: string | null;
+  location: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  mapsUrl: string | null;
   createdAt: string;
   updatedAt: string;
 };

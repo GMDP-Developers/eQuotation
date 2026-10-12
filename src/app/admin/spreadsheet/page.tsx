@@ -24,6 +24,13 @@ export default async function SpreadsheetPage() {
     capacityUnit: r.capacityUnit,
     status: r.status,
     notes: r.notes,
+    pickupMethod: r.pickupMethod,
+    datacenter: r.datacenter,
+    datacenterOther: r.datacenterOther,
+    location: r.location,
+    latitude: r.latitude,
+    longitude: r.longitude,
+    mapsUrl: r.mapsUrl,
     createdAt: r.createdAt.toISOString(),
     updatedAt: r.updatedAt.toISOString(),
   }));

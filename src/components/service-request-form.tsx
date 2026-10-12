@@ -7,12 +7,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Check, CheckCircle2, Loader2, Lock, PackageSearch, RotateCcw, Send, Star } from "lucide-react";
 import { toast } from "sonner";
 
-import { CAPACITY_UNITS, serviceRequestSchema, type PublicAbout, type PublicService, type ServiceRequestInput, type CapacityUnit } from "@/types";
+import { CAPACITY_UNITS, serviceRequestSchema, type PublicAbout, type PublicService, type ServiceRequestInput, type CapacityUnit, DATACENTERS, PICKUP_LABELS, PICKUP_METHODS, type PickupMethod } from "@/types";
+import { parseLocation } from "@/lib/geo";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CableMap } from "@/components/cable-map";
+import { CoordsMap } from "@/components/coords-map";
 import { cn } from "@/lib/utils";
 
 
@@ -237,12 +239,20 @@ export function ServiceRequestForm({
       capacity: undefined,
       capacityUnit: "Mbps",
       notes: "",
+      pickupMethod: undefined,
+      datacenter: undefined,
+      datacenterOther: "",
+      location: "",
       website: "",
     },
   });
 
   const serviceType = watch("serviceType");
   const capacityUnit = watch("capacityUnit");
+  const pickupMethod = watch("pickupMethod");
+  const datacenter = watch("datacenter");
+  const locationValue = watch("location");
+  const parsedLocation = locationValue ? parseLocation(locationValue) : null;
   const selectedService = services.find((s) => s.name === serviceType);
 
   const lockedCapacity = selectedService?.lockedCapacity ?? null;
@@ -253,6 +263,16 @@ export function ServiceRequestForm({
     setValue("capacity", lockedCapacity, { shouldValidate: true });
     setValue("capacityUnit", lockedUnit, { shouldValidate: true });
   }, [lockedCapacity, lockedUnit, setValue]);
+
+  function setPickup(m: PickupMethod) {
+    setValue("pickupMethod", m, { shouldValidate: true });
+    if (m === "DATA_CENTER") {
+      setValue("location", "", { shouldValidate: true });
+    } else {
+      setValue("datacenter", undefined, { shouldValidate: true });
+      setValue("datacenterOther", "", { shouldValidate: true });
+    }
+  }
 
   async function onSubmit(values: ServiceRequestInput) {
     setSubmitting(true);
@@ -457,6 +477,96 @@ export function ServiceRequestForm({
           })}
         </div>
         <FieldError message={errors.serviceType?.message} />
+      </section>
+
+      <section className="reveal-up reveal-delay-2 flex flex-col gap-4">
+        <SectionTitle required>Pengambilan Koneksi</SectionTitle>
+        <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Pengambilan koneksi">
+          {PICKUP_METHODS.map((m) => {
+            const selected = pickupMethod === m;
+            return (
+              <button
+                key={m}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                onClick={() => setPickup(m)}
+                className={cn(
+                  "min-h-[42px] rounded-xl border px-3 py-2.5 text-center text-[13px] font-medium leading-tight shadow-sm transition-all duration-200 hover:-translate-y-px hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/10",
+                  selected
+                    ? "border-[#8c7d6b] bg-[#8c7d6b] text-white"
+                    : "border-[#e8e0d6] bg-[#fdfcfa] text-[#6b5f55] hover:border-[#d6c8b8] hover:bg-[#faf6f1]"
+                )}
+              >
+                {PICKUP_LABELS[m]}
+              </button>
+            );
+          })}
+        </div>
+        <FieldError message={errors.pickupMethod?.message} />
+
+        {pickupMethod === "DATA_CENTER" ? (
+          <div className="flex flex-col gap-3">
+            <SectionTitle required>Tempat Datacenter</SectionTitle>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4" role="radiogroup" aria-label="Tempat datacenter">
+              {DATACENTERS.map((d) => {
+                const selected = datacenter === d;
+                return (
+                  <button
+                    key={d}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    onClick={() => setValue("datacenter", d, { shouldValidate: true })}
+                    className={cn(
+                      "min-h-[42px] rounded-xl border px-3 py-2.5 text-center text-[13px] font-medium shadow-sm transition-all",
+                      selected
+                        ? "border-[#8c7d6b] bg-[#8c7d6b] text-white"
+                        : "border-[#e8e0d6] bg-[#fdfcfa] text-[#6b5f55] hover:border-[#d6c8b8]"
+                    )}
+                  >
+                    {d}
+                  </button>
+                );
+              })}
+            </div>
+            <FieldError message={errors.datacenter?.message} />
+            {datacenter === "Lainnya" ? (
+              <Field
+                id="datacenterOther"
+                label="Sebutkan datacenter lainnya"
+                placeholder="Nama datacenter lain"
+                error={errors.datacenterOther?.message}
+                required
+                {...register("datacenterOther")}
+              />
+            ) : null}
+          </div>
+        ) : null}
+
+        {pickupMethod === "DELIVERY" ? (
+          <div className="flex flex-col gap-3">
+            <Label htmlFor="location" className="text-[13px]">
+              Titik Koordinat<span className="ml-0.5 text-destructive">*</span>
+            </Label>
+            <Input
+              id="location"
+              placeholder="Tempel link Google Maps atau ketik -6.2,106.8"
+              className={inputClass}
+              {...register("location")}
+            />
+            <p className="text-[12px] text-muted-foreground">
+              Buka Google Maps → Share → Copy link, lalu tempel di sini.
+            </p>
+            <FieldError message={errors.location?.message} />
+            {parsedLocation ? (
+              <CoordsMap
+                coords={parsedLocation.coords}
+                className="h-48 w-full rounded-lg border bg-white"
+              />
+            ) : null}
+          </div>
+        ) : null}
       </section>
 
       <section className="reveal-up reveal-delay-2 flex flex-col gap-5">
