@@ -32,8 +32,8 @@ async function main() {
       subtitle: null,
       description:
         "A complete connectivity solution combining 70% IndoMIX and 30% InterMIX, delivering optimized local content access with reliable international reach.",
-      imagePreview: "/images/services/supermix.png",
-      imageFull: "/images/services/supermix.png",
+      imagePreview: "/images/services/SuperMIX.png",
+      imageFull: "/images/services/SuperMIX.png",
       sortOrder: 0,
       active: true,
       bestSeller: true,
@@ -45,8 +45,8 @@ async function main() {
       subtitle: null,
       description:
         "Premium international connectivity combining Tier-1 IP Transit, Singapore IX, and Google PNI for diverse and optimized global routes.",
-      imagePreview: "/images/services/intermix.png",
-      imageFull: "/images/services/intermix.png",
+      imagePreview: "/images/services/InterMIX.png",
+      imageFull: "/images/services/InterMIX.png",
       sortOrder: 1,
       active: true,
       bestSeller: true,
@@ -58,8 +58,8 @@ async function main() {
       subtitle: null,
       description:
         "Indonesia-focused connectivity combining local IX, PNI, and CDN/cache for efficient access to major networks and content platforms.",
-      imagePreview: "/images/services/indomix.png",
-      imageFull: "/images/services/indomix.png",
+      imagePreview: "/images/services/IndoMIX.png",
+      imageFull: "/images/services/IndoMIX.png",
       sortOrder: 2,
       active: true,
       bestSeller: true,
@@ -71,8 +71,8 @@ async function main() {
       subtitle: null,
       description:
         "A balanced combination of Tier-1 IP Transit and Singapore IX, providing global reach with efficient peering connectivity.",
-      imagePreview: "/images/services/ultramix.png",
-      imageFull: "/images/services/ultramix.png",
+      imagePreview: "/images/services/UltraMIX.png",
+      imageFull: "/images/services/UltraMIX.png",
       sortOrder: 3,
       active: true,
       bestSeller: false,
@@ -84,8 +84,8 @@ async function main() {
       subtitle: null,
       description:
         "Pure Tier-1 IP Transit through Lumen and NTT, designed for reliable and diversified global Internet connectivity.",
-      imagePreview: "/images/services/tierone.png",
-      imageFull: "/images/services/tierone.png",
+      imagePreview: "/images/services/TierOne.png",
+      imageFull: "/images/services/TierOne.png",
       sortOrder: 4,
       active: true,
       bestSeller: false,
@@ -97,8 +97,8 @@ async function main() {
       subtitle: null,
       description:
         "Direct access to the Singapore peering ecosystem through SGIX and Equinix IX, ideal for complementing existing transit.",
-      imagePreview: "/images/services/singmix.png",
-      imageFull: "/images/services/singmix.png",
+      imagePreview: "/images/services/SingMIX.png",
+      imageFull: "/images/services/SingMIX.png",
       sortOrder: 5,
       active: true,
       bestSeller: false,
@@ -110,8 +110,8 @@ async function main() {
       subtitle: null,
       description:
         "Dedicated Google PNI connectivity for optimized and direct access to Google's network and services.",
-      imagePreview: "/images/services/alpha.png",
-      imageFull: "/images/services/alpha.png",
+      imagePreview: "/images/services/Alpha.png",
+      imageFull: "/images/services/Alpha.png",
       sortOrder: 6,
       active: true,
       bestSeller: false,
@@ -123,8 +123,8 @@ async function main() {
       subtitle: null,
       description:
         "Secure connectivity powered by StormWall Anti-DDoS, designed to protect network availability against DDoS attacks.",
-      imagePreview: "/images/services/secure.png",
-      imageFull: "/images/services/secure.png",
+      imagePreview: "/images/services/Secure.png",
+      imageFull: "/images/services/Secure.png",
       sortOrder: 7,
       active: true,
       bestSeller: false,
@@ -136,8 +136,8 @@ async function main() {
       subtitle: null,
       description:
         "A dedicated package for companies preparing for ULO as part of their ISP licensing process, featuring 100 Mbps InterMIX connectivity with an included /29 IP allocation.",
-      imagePreview: null,
-      imageFull: null,
+      imagePreview: "/images/services/ULO-Starter-Pack.png",
+      imageFull: "/images/services/ULO-Starter-Pack.png",
       sortOrder: 8,
       active: true,
       bestSeller: false,
@@ -148,8 +148,8 @@ async function main() {
 
   // rename lama → baru sebelum upsert (nama unik, biar gak dobel sortOrder)
   await prisma.service.updateMany({ where: { name: "GTrans" }, data: { name: "Alpha" } });
-  await prisma.service.updateMany({ where: { imagePreview: "/images/services/gtrans.png" }, data: { imagePreview: "/images/services/alpha.png" } });
-  await prisma.service.updateMany({ where: { imageFull: "/images/services/gtrans.png" }, data: { imageFull: "/images/services/alpha.png" } });
+  await prisma.service.updateMany({ where: { imagePreview: "/images/services/gtrans.png" }, data: { imagePreview: "/images/services/Alpha.png" } });
+  await prisma.service.updateMany({ where: { imageFull: "/images/services/gtrans.png" }, data: { imageFull: "/images/services/Alpha.png" } });
 
   for (const s of services) {
     await prisma.service.upsert({
