@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 80",
     "lint": "eslint .",
     "postinstall": "prisma generate",
     "setup": "node scripts/setup-env.mjs && prisma migrate deploy && prisma db seed",

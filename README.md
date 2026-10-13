@@ -18,8 +18,8 @@ Next.js (App Router) · TypeScript · Tailwind + shadcn UI · Prisma + SQLite (W
 ### 1. Buat VM di Proxmox
 Buat LXC/VM Ubuntu 22.04/24.04, RAM 1GB+, disk 10GB. Pastikan dapat IP privat (mis. `10.202.10.15`). Untuk akses publik, buat DNAT di Proxmox/firewall:
 ```
-IP_PUBLIK:80  → 10.202.10.15:3000
-IP_PUBLIK:443 → 10.202.10.15:3000  (jika pakai TLS)
+IP_PUBLIK:80  → 10.202.10.15:80
+IP_PUBLIK:443 → 10.202.10.15:80  (jika pakai TLS)
 ```
 Atau pakai Nginx reverse-proxy di depan. Tidak perlu config `NEXTAUTH_URL` — `trustHost:true` sudah aktif otomatis ikut `Host` publik.
 
@@ -76,12 +76,14 @@ npm run dev
 npm run build
 npm start
 # → NODE_ENV=production otomatis (Next 16)
-# listen 0.0.0.0:3000
+# listen 0.0.0.0:80
 
 # atau eksplisit:
 NODE_ENV=production npm run build && NODE_ENV=production npm start
 ```
-Akses: `http://IP_VM:3000` (lokal) atau `http://IP_PUBLIK` (via DNAT). Tidak perlu set `NEXTAUTH_URL` — `AUTH_TRUST_HOST=true` bikin Auth.js ikut `Host` publik, tidak akan `MissingCSRF`.
+Akses: `http://IP_VM` (lokal, port 80) atau `http://IP_PUBLIK` (via DNAT). Tidak perlu set `NEXTAUTH_URL` — `AUTH_TRUST_HOST=true` bikin Auth.js ikut `Host` publik, tidak akan `MissingCSRF`.
+
+> Port 80 butuh hak istimewa. Pilih salah satu: jalankan dengan `sudo npm start`, atau systemd dengan `AmbientCapabilities=CAP_NET_BIND_SERVICE`, atau `setcap 'cap_net_bind_service=+ep' $(readlink -f $(which node))`.
 
 **Update code setelah `git pull`:**
 ```bash
@@ -100,6 +102,7 @@ pm2 save && pm2 startup
 
 # atau systemd: buat /etc/systemd/system/equotation.service
 # ExecStart=/usr/bin/npm start  WorkingDirectory=/opt/equotation
+# AmbientCapabilities=CAP_NET_BIND_SERVICE  (biar bisa bind port 80 tanpa root)
 ```
 
 > Jalankan `npm run dev` atau `npm run build` sekali sebelum typecheck/CI (type `LayoutProps` di-generate ke `.next/types`).
@@ -124,14 +127,14 @@ npm run admin:reset-password -- admin PasswordBaru123
 Reset menghapus sesi aktif user tersebut (wajib login ulang).
 
 ### 7. Catatan NAT / Reverse Proxy
-- **DNAT murni** (`IP_PUBLIK → 10.x:3000`): tanpa Nginx, cukup `AUTH_TRUST_HOST=true` — sudah handle.
+- **DNAT murni** (`IP_PUBLIK → 10.x:80`): tanpa Nginx, cukup `AUTH_TRUST_HOST=true` — sudah handle.
 - **Nginx di depan `next start`**: wajib forward header agar tidak `MissingCSRF` / cookie `__Secure-` mismatch:
 ```nginx
 proxy_set_header Host $host;
 proxy_set_header X-Forwarded-Host $host;
 proxy_set_header X-Forwarded-Proto $scheme;  # https bila publik TLS
 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-proxy_pass http://10.202.10.15:3000;
+proxy_pass http://10.202.10.15:80;
 ```
 - Jika publik pakai `https` tapi app `http` di balik Nginx, `X-Forwarded-Proto: https` wajib — kalau tidak, Auth.js set cookie non-Secure tapi browser minta Secure → login loop.
 
@@ -154,7 +157,7 @@ Seed (`npm run db:seed`) hanya mengisi 9 layanan + setting brand (idempoten — 
 |---------|--------|
 | `npm run dev` | Dev server |
 | `npm run build` | Build production |
-| `npm start` | Start production (`NODE_ENV=production`) |
+| `npm start` | Start production, port 80 (`NODE_ENV=production`) |
 | `npm run setup` | **VM baru:** `.env` + migrate + seed (sekali, idempoten) |
 | `npm run lint` | ESLint |
 | `npm run db:migrate` | Prisma migrate dev (buat migration baru) |
