@@ -106,12 +106,12 @@ async function main() {
       lockedCapacityUnit: null,
     },
     {
-      name: "GTrans",
+      name: "Alpha",
       subtitle: null,
       description:
         "Dedicated Google PNI connectivity for optimized and direct access to Google's network and services.",
-      imagePreview: "/images/services/gtrans.png",
-      imageFull: "/images/services/gtrans.png",
+      imagePreview: "/images/services/alpha.png",
+      imageFull: "/images/services/alpha.png",
       sortOrder: 6,
       active: true,
       bestSeller: false,
@@ -145,6 +145,11 @@ async function main() {
       lockedCapacityUnit: "Mbps",
     },
   ];
+
+  // rename lama → baru sebelum upsert (nama unik, biar gak dobel sortOrder)
+  await prisma.service.updateMany({ where: { name: "GTrans" }, data: { name: "Alpha" } });
+  await prisma.service.updateMany({ where: { imagePreview: "/images/services/gtrans.png" }, data: { imagePreview: "/images/services/alpha.png" } });
+  await prisma.service.updateMany({ where: { imageFull: "/images/services/gtrans.png" }, data: { imageFull: "/images/services/alpha.png" } });
 
   for (const s of services) {
     await prisma.service.upsert({
