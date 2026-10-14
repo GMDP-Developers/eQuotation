@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Check, CheckCircle2, Loader2, Lock, PackageSearch, RotateCcw, Send, Star } from "lucide-react";
+import { Check, CheckCircle2, Grip, Loader2, Lock, PackageSearch, RotateCcw, Send, Star } from "lucide-react";
 import { toast } from "sonner";
 
-import { CAPACITY_UNITS, serviceRequestSchema, type PublicAbout, type PublicService, type ServiceRequestInput, type CapacityUnit, DATACENTERS, PICKUP_LABELS, PICKUP_METHODS, type PickupMethod } from "@/types";
+import { DATACENTER_ICONS, CAPACITY_UNITS, serviceRequestSchema, type PublicAbout, type PublicService, type ServiceRequestInput, type CapacityUnit, DATACENTERS, PICKUP_LABELS, PICKUP_METHODS, type PickupMethod } from "@/types";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -517,12 +517,28 @@ export function ServiceRequestForm({
                     aria-checked={selected}
                     onClick={() => setValue("datacenter", d, { shouldValidate: true })}
                     className={cn(
-                      "min-h-[42px] rounded-xl border px-3 py-2.5 text-center text-[13px] font-medium shadow-sm transition-all",
+                      "flex flex-col items-center gap-2 rounded-xl border px-3 py-3 text-center text-[13px] font-medium shadow-sm transition-all",
                       selected
                         ? "border-[#8c7d6b] bg-[#8c7d6b] text-white"
                         : "border-[#e8e0d6] bg-[#fdfcfa] text-[#6b5f55] hover:border-[#d6c8b8]"
                     )}
                   >
+                    {d === "Lainnya" ? (
+                      <Grip className={cn("size-8 text-muted-foreground", selected && "text-white")} />
+                    ) : (
+                      <Image
+                        src={DATACENTER_ICONS[d]}
+                        alt={d}
+                        width={32}
+                        height={32}
+                        className={cn(
+                          "size-8 object-contain",
+                          selected && d !== "Cyber APJII" && "brightness-0 invert",
+                          selected && d === "Cyber APJII" && "drop-shadow-[0_0_2px_rgba(0,0,0,1)]",
+                          !selected && d === "Cyber APJII" && "drop-shadow-[0_0_1px_rgba(0,0,0,0.5)]"
+                        )}
+                      />
+                    )}
                     {d}
                   </button>
                 );

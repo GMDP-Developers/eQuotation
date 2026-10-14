@@ -44,7 +44,14 @@ export const PICKUP_LABELS: Record<PickupMethod, string> = {
   DATA_CENTER: "Koneksi ke Data Center",
   DELIVERY: "Di antar via metro ke titik koordinat",
 };
-export const DATACENTERS = ["IDC", "Cyber APJII", "Omadata", "Lainnya"] as const;
+export const DATACENTERS = ["IDC 3D", "Cyber APJII", "Omadata Surabaya", "Lainnya"] as const;
+
+export const DATACENTER_ICONS: Record<typeof DATACENTERS[number], string> = {
+  "IDC 3D": "/images/dc/idc.png",
+  "Cyber APJII": "/images/dc/Apjii.png",
+  "Omadata Surabaya": "/images/dc/omadata.webp",
+  "Lainnya": "",
+};
 export type Datacenter = (typeof DATACENTERS)[number];
 
 export const serviceRequestSchema = z.object({

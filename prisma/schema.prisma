@@ -41,7 +41,7 @@ model ServiceRequest {
   ipAddress    String?
   notes        String?
   pickupMethod    String  // 'DATA_CENTER' | 'DELIVERY'
-  datacenter      String? // 'IDC' | 'Cyber APJII' | 'Omadata' | 'Lainnya'
+  datacenter      String? // 'IDC 3D' | 'Cyber APJII' | 'Omadata Surabaya' | 'Lainnya'
   datacenterOther String?
   location        String? // input mentah user
   latitude        Float?
